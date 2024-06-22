@@ -1,0 +1,124 @@
+﻿@page "/mainAdmin/Tools/news/create"
+
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.SharedPages
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+@using EducationSystem.Domain.Files;
+@using EducationSystem.Shared.InputData
+@using EducationSystem.Shared.InputData.ClassInput
+@using EducationSystem.Shared.Models
+@using EducationSystem.Shared.Models.ClassDto
+@using EducationSystem.Shared.Other;
+@using EducationSystem.Shared.OutputData
+@using EducationSystem.Shared.Role
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject NavigationManager Navigation
+
+<AdminNavMenu />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+
+<body class="adminPage">
+    <VertificationOfAuthorization _roleTypeId="1" />
+    <div class="content">
+        <h1>Создание новости</h1>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Название<span class="required-fill">*</span></td>
+                    <td><input type="text" @bind="_newEntity.Title" /></td>
+                </tr>
+                <tr>
+                    <td>Текст<span class="required-fill">*</span></td>
+                    <td><input type="text" @bind="_newEntity.Text" /></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <InputFile OnChange="OnInputFile" />
+        <div class="padding-20"></div>
+        <button class="buttonPage" @onclick="SendToServer">Загрузить </button>
+        
+        @if ((listOfNewEntity != null) && (listOfNewEntity.Count!=0))
+        {
+            <table>
+                <tr>
+                    <td>Id</td>
+                    <td>Title</td>
+                    <td>Text</td>
+                    <td>Path</td>
+                </tr>
+            
+            @foreach (var item in listOfNewEntity)
+            {
+                <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Title</td>
+                        <td>@item.Text</td>
+                        <td>@item.Path</td>
+                </tr>
+            }
+            </table>
+        }
+
+    </div>
+</body>
+
+@code {
+    NewsDto _newEntity = new();
+    List<NewsDto> listOfNewEntity = new();
+    Response<NewsDto> _response = new();
+
+    FileByte file = new();
+    FileByte fileByte = new();
+
+    protected override async Task OnInitializedAsync() { }
+
+    async Task OnInputFile(InputFileChangeEventArgs e)
+    {
+        var file = e.GetMultipleFiles().FirstOrDefault();
+        if (file == null)
+        {
+            return;
+        }
+        else
+        {
+            fileByte.Name = _newEntity.Title+file.Name;
+            using (var ms = new MemoryStream())
+            {
+                await file.OpenReadStream(maxAllowedSize: 5048000000).CopyToAsync(ms);
+                fileByte.Data = ms.ToArray();
+            }
+            fileByte.Path = @"News";
+            fileByte.TypeId = 0;
+            fileByte.ClassNumber = 0;
+            fileByte.ItemNumber = 0;
+            fileByte.PersonId = 0;
+        }
+
+    }
+    private async Task SendToServer()
+    {
+        using var request = await ClientInfo.Http.PostAsJsonAsync("FileData/Send", fileByte);
+        try
+        {
+            _newEntity.Path = $@"\FileStorage\News\0000{fileByte.Name}";
+            using var request1 = await ClientInfo.Http.PostAsJsonAsync("News/Create", _newEntity);
+                request1.EnsureSuccessStatusCode();
+                _response = await request1.Content.ReadFromJsonAsync<Response<NewsDto>>();
+                if ((_response != null) && (!_response.Error))
+                {
+                    listOfNewEntity.Add(_response.Value);
+                }
+            }
+            catch (Exception ex)
+            {
+                _response = new("Ошибка отправки запроса серверу", ex.Message);
+            }
+            StateHasChanged();
+    }
+}

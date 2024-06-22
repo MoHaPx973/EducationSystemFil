@@ -1,0 +1,66 @@
+﻿@page "/loadPage"
+@using EducationSystem.BlazorServer.StaticHelpers;
+@using EducationSystem.Domain.Files;
+@using EducationSystem.Shared.Files;
+@using EducationSystem.Shared.OutputData;
+@using Microsoft.AspNetCore.Components.Forms;
+
+@inject NavigationManager Navigation
+
+<div>aaaa</div>
+@if ((ListFilePath!=null)&&(ListFilePath.Value!=null))
+{
+    @foreach (var item in ListFilePath.Value)
+    {
+        <a @onclick="@( () => GetFile(item.Id))">@item.Name</a>
+        <div>a</div>
+    }  
+}
+
+<InputFile OnChange="OnInputFile"/>
+<button @onclick="SendToServer">Send</button>
+
+@code {
+    //using var request = await ClientInfo.Http.PostAsJsonAsync("Person/Create", _newPerson);
+    // request.EnsureSuccessStatusCode();
+    // _response = await request.Content.ReadFromJsonAsync<Response<PersonDto>>();
+    FileByte fileByte = new();
+    Response<IEnumerable<FilePathDto>> ListFilePath=new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var ServerOk = new HttpClient() { BaseAddress = new Uri("http://localhost:9730/") };
+        ListFilePath = await ServerOk.GetFromJsonAsync<Response<IEnumerable<FilePathDto>>>("FileData/GetAllById/1");
+    }
+
+    async Task OnInputFile(InputFileChangeEventArgs e)
+    {
+        var file = e.GetMultipleFiles().FirstOrDefault();
+        if (file == null)
+        {
+            return;
+        }
+        else
+        {
+            DateTime time = DateTime.Now;
+            fileByte.Name = "1" + file.Name;
+            using (var ms = new MemoryStream())
+            {
+                await file.OpenReadStream(maxAllowedSize: 20480000).CopyToAsync(ms);
+                fileByte.Data = ms.ToArray();
+            }
+            fileByte.Path = @"КТП";
+            fileByte.PersonId = 1;
+        }
+    }
+    private async Task SendToServer()
+    {
+        var ServerOk = new HttpClient() { BaseAddress = new Uri("http://localhost:9730/")};
+        using var request = await ServerOk.PostAsJsonAsync("FileData/Send", fileByte);
+        StateHasChanged();
+    }
+    private void GetFile(int id)
+    {
+        Navigation.NavigateTo("http://localhost:9730/" + $"FileData/GetByPath/{id}");
+    }
+}

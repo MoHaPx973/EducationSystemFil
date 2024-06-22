@@ -1,0 +1,101 @@
+﻿@page "/mainAdmin/Tools"
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+
+<AdminNavMenu />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <VertificationOfAuthorization _roleTypeId="1" />
+    <div class="content">
+        
+        <table class="table">
+            <tbody>
+                <tr class="custom-black-line">
+                    <td class="custom-table-head">Студент</td>
+                    <td>
+                        <NavLink class="nav-link" href="/mainAdmin/Tools/student">
+                            <span class="oi oi-plus" aria-hidden="true"></span> Открыть список
+                        </NavLink>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <NavLink class="nav-link" href="/mainAdmin/Tools/student/create">
+                            <span class="oi oi-plus" aria-hidden="true"></span> Создать
+                        </NavLink>
+                    </td>
+                </tr>
+                <tr class="custom-black-line">
+                    <td class="custom-table-head">Учебный план</td>
+                    <td>
+                        <NavLink class="nav-link" href="mainAdmin/Tools/curriculum">
+                            <span class="oi oi-plus" aria-hidden="true"></span> Открыть список
+                        </NavLink>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <NavLink class="nav-link" href="/mainAdmin/Tools/curriculum/create">
+                            <span class="oi oi-plus" aria-hidden="true"></span> Создать 
+                        </NavLink>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <NavLink class="nav-link" href="mainAdmin/CreateSchool">
+                            <span class="oi oi-plus" aria-hidden="true"></span> Заполнить 
+                        </NavLink>
+                    </td>
+                </tr>
+
+                <tr class="custom-black-line">
+                    <td class="custom-table-head">Расписание</td>
+                    <td>
+                        <NavLink class="nav-link" href="mainAdmin/Tools/Schedule">
+                            <span class="oi oi-plus" aria-hidden="true"></span> Открыть список
+                        </NavLink>
+                    </td>
+                </tr>
+
+                <tr class="custom-black-line">
+                    <td class="custom-table-head">Документы</td>
+                    <td>
+                        <NavLink class="nav-link" href="Tools/document/Main">
+                            <span class="oi oi-plus" aria-hidden="true"></span> Загрузить документы
+                        </NavLink>
+                    </td>
+                </tr>
+
+                <tr class="custom-black-line">
+                    <td class="custom-table-head">Новости</td>
+                    <td>
+                        <NavLink class="nav-link" href="mainAdmin/Tools/news/create">
+                            <span class="oi oi-plus" aria-hidden="true"></span> Создать
+                        </NavLink>
+                    </td>
+                </tr>
+
+                <tr>
+
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+</body>
+
+
+
+
+@code {
+
+}

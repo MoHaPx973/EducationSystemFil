@@ -1,0 +1,43 @@
+﻿@page "/mainTeacher/assessment/assessmentInfo/{_assessmentId:int}"
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers;
+@using EducationSystem.Shared.Models.AssessmentDto;
+@using EducationSystem.Shared.OutputData;
+
+<TeacherNavMenu />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <VertificationOfAuthorization _roleTypeId="2" />
+    <div class="content" style="font-size:18px">
+        @if ((assessment != null) && (assessment.Value!=null))
+        {
+            <h3>Данные об оценке ученика @assessment.Value.Student.Surname @assessment.Value.Student.Name</h3>
+            <div class="padding-5">Предмет: @assessment.Value.LinkItem.LinkItem.Name</div>
+            <div class="padding-5">Оценка: @assessment.Value.Point</div>
+            <div class="padding-5">ФИО учителя: @assessment.Value.Teacher.Surname @assessment.Value.Teacher.Name @assessment.Value.Teacher.MiddleName</div>
+            <div class="padding-5">Описание: @assessment.Value.Description</div>
+        }
+    </div>
+</body>
+
+@code {
+    [Parameter]
+    public int _assessmentId { get; set; }
+
+    private Response<FinalAssessmentDto> assessment=new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            //SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<PersonDto>>>
+            //    ($"Person/GetPageEnumerableByParams/{start}/{count}/{_filter.SelectValue1}/{personIsHidden}/{_filter.SelectValue2}");
+            assessment = await ClientInfo.Http.GetFromJsonAsync<Response<FinalAssessmentDto>>($"FinalAssessment/GetById/{_assessmentId}");
+        }
+        catch {}
+    }
+}

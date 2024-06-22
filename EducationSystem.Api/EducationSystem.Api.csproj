@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="DataStorage\**" />
+    <Compile Remove="FileStorage\UserFiles\**" />
+    <Compile Remove="Migrations\**" />
+    <Content Remove="DataStorage\**" />
+    <Content Remove="FileStorage\UserFiles\**" />
+    <Content Remove="Migrations\**" />
+    <EmbeddedResource Remove="DataStorage\**" />
+    <EmbeddedResource Remove="FileStorage\UserFiles\**" />
+    <EmbeddedResource Remove="Migrations\**" />
+    <None Remove="DataStorage\**" />
+    <None Remove="FileStorage\UserFiles\**" />
+    <None Remove="Migrations\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.17" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.17" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.17" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.17" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EducationSystem.Adapter\EducationSystem.Adapter.csproj" />
+    <ProjectReference Include="..\EducationSystem.App\EducationSystem.App.csproj" />
+    <ProjectReference Include="..\EducationSystem.Shared\EducationSystem.Shared.csproj" />
+    <ProjectReference Include="..\EducationSystemProvider\EducationSystem.Provider.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="FileStorage\TeacherFile\" />
+    <Folder Include="FileStorage\News\" />
+  </ItemGroup>
+
+</Project>

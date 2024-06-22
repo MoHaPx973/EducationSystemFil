@@ -1,0 +1,53 @@
+﻿@using EducationSystem.Shared.Models
+@using EducationSystem.Shared.OutputData
+@using EducationSystem.BlazorServer.StaticHelpers
+
+
+
+<head>
+    <link rel="stylesheet" href="css/NavMenuStyle.css">
+</head>
+<body class="nav-menu-body">
+
+    <div class="vertical-menu">
+        @*  <span> <img class="logo-png" src="/image/mySchool.png"></span> *@
+        <a href="/News" class="active" style="display: inline-block; vertical-align: middle; text-decoration: none;">
+            <img src="image/logo.png" width="40px" height="40px" style="display: inline-block;">
+            <span style="margin-bottom: 30px; display: inline-block; vertical-align: middle;">Моя школа</span>
+        </a>
+        <a href="/News" class="active">Главная</a>
+        <a href="/News">Новости</a>
+        <a href="/mainStudent/Tools/assessment">Мой оценки</a>
+        <a href="/mainStudent/Tools/Schedule">Моё расписание</a>
+    </div>
+
+    <div class="navbar">
+        <div class="dropdown">
+            <button class="dropbtn">
+                <div>@ClientInfo.FullName </div>
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="/personInfo/@Id">Личный кабинет</a>
+                <a href="/Logout">Выход</a>
+            </div>
+        </div>
+        <a href="#home">Сообщения</a>
+        <a href="#news">Новости</a>
+    </div>
+
+</body>
+
+@code {
+    Response<PersonDto> _person = new();
+    int Id;
+    protected override async Task OnInitializedAsync()
+    {
+        Id = @ClientInfo.UserInfo.LinkPerson.Id;
+    }
+    // protected override async Task OnInitializedAsync()
+    // {
+    //url(image/icon_eye.png)
+    // }
+
+}

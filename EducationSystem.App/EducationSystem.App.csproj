@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Mappers\RelationshipsMapper\**" />
+    <EmbeddedResource Remove="Mappers\RelationshipsMapper\**" />
+    <None Remove="Mappers\RelationshipsMapper\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EducationSystem.Domain\EducationSystem.Domain.csproj" />
+    <ProjectReference Include="..\EducationSystem.Shared\EducationSystem.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

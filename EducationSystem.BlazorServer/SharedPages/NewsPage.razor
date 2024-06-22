@@ -1,0 +1,86 @@
+﻿@page "/News"
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.Pages.ParentPage.Helper
+@using EducationSystem.BlazorServer.Pages.StudentPage.Helper
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+@using EducationSystem.Shared.Models;
+@using EducationSystem.Shared.Other;
+@using EducationSystem.Shared.OutputData;
+@using EducationSystem.Shared.Relationships;
+
+
+@inject NavigationManager Navigation
+
+@if ((ClientInfo.IsAuthenticated == false) || (ClientInfo.UserInfo == null) || ClientInfo.UserInfo.Role == null)
+{
+    <VertificationOfAuthorization _roleTypeId="0" />
+}
+@if (ClientInfo.UserInfo.Role.Priority == 4)
+{
+    <ParentNavMenu />
+}
+@if (ClientInfo.UserInfo.Role.Priority == 3)
+{
+    <StudentNavMenu />
+}
+@if (ClientInfo.UserInfo.Role.Priority == 2)
+{
+    <TeacherNavMenu />
+}
+@if (ClientInfo.UserInfo.Role.Priority == 1)
+{
+    <AdminNavMenu />
+}
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <div class="content">
+        <div>
+            @if ((request!=null)&&(request.Value!=null))
+            @foreach (var item in request.Value)
+            {
+                @if (!(string.IsNullOrEmpty(item.Path)))
+                    {
+                        <div style="width:20%"></div>
+                        <div style="width:60%" class="user-info">
+                            @*<img src="@newPath+@item.Path" alt="Картинка" />*@
+                            <h2>@item.Title</h2>
+                            <p align="justify">@item.Text</p>
+                        </div>
+                        <div style="width:20%"></div>
+                    }
+                    <div class="padding-5"></div>
+            }
+        </div>
+
+    </div>
+</body>
+
+@code {
+
+    string newPath = string.Empty;
+    Response<IEnumerable<NewsDto>> request = new();
+    List<NewsDto> newsList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        newPath = Directory.GetCurrentDirectory();
+        try
+        {
+            request = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<NewsDto>>>("News/GetAllEnumerable");
+            newsList = request.Value.ToList();
+            newsList = newsList.OrderByDescending(i => i.Id).ToList();
+        }
+        catch
+        {
+        
+        }
+       
+        StateHasChanged();
+    }
+
+}

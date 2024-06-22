@@ -1,0 +1,107 @@
+﻿@page "/personInfo/{personId:int}"
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.Pages.ParentPage.Helper
+@using EducationSystem.BlazorServer.Pages.StudentPage.Helper
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+@using EducationSystem.Shared.Models;
+@using EducationSystem.Shared.OutputData;
+@using EducationSystem.Shared.Relationships;
+
+
+@inject NavigationManager Navigation
+
+@if ((ClientInfo.IsAuthenticated == false) || (ClientInfo.UserInfo == null) || ClientInfo.UserInfo.Role == null)
+{
+    <VertificationOfAuthorization _roleTypeId="0" />
+}
+@if (ClientInfo.UserInfo.Role.Priority == 4)
+{
+    <ParentNavMenu />
+}
+@if (ClientInfo.UserInfo.Role.Priority==3)
+{
+    <StudentNavMenu />
+}
+@if (ClientInfo.UserInfo.Role.Priority == 2)
+{
+    <TeacherNavMenu />
+}
+@if (ClientInfo.UserInfo.Role.Priority == 1)
+{
+    <AdminNavMenu />
+}
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <div class="content">
+        <div style="display:flex">
+            <div style="width:20%"></div>
+            <div style="width:60%" class="user-info">
+                
+                <h2>Информация о пользователе</h2>
+                @if ((_searchEntity!=null)&&(_searchEntity.Value!=null))
+                {
+                    <p>@_searchEntity.Value.Surname @_searchEntity.Value.Name @_searchEntity.Value.MiddleName</p>
+                    <p>Роль: @_searchEntity.Value.Role.Name</p>
+                    <p>Пол: @_searchEntity.Value.Gender</p>
+                    <p>День рождения: @_searchEntity.Value.Birthday.Day.@_searchEntity.Value.Birthday.Month.@_searchEntity.Value.Birthday.Year</p>
+                    <p>Почта: @_searchEntity.Value.Email</p>
+                    <p>Телефон: @_searchEntity.Value.Phone</p>
+                    <p>Адрес проживания: @_searchEntity.Value.Address</p>
+                    @if ((_searchEntity.Value.Role.Id==3)&&(listParents!=null)&&(listParents.Count!=0))
+                    {
+                        <p style="padding:10px">Информация о родителях:</p>
+                        @foreach (var item in listParents)
+                        {
+                            <div class="link" @onclick="@( () => ParentInfo(item.ParentId))">
+                                @item.Parent.Surname @item.Parent.Name @item.Parent.MiddleName
+                            </div>
+                        }
+                    }
+                }
+               
+            </div>
+            <div style="width:20%"></div>
+        </div>
+       
+    </div>
+</body>
+
+@code {
+    [Parameter] public int personId { get; set; }
+
+    Response<PersonDto> _searchEntity = new();
+    Response<IEnumerable<ParentsOfStudentsDto>> parents = new();
+    List<ParentsOfStudentsDto> listParents = new();
+    Response<PersonDto> _response = new();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _searchEntity = await ClientInfo.Http.GetFromJsonAsync<Response<PersonDto>>($"Person/FindById/{personId}");
+            //ParentsOfStudents/GetByStudentIdAsync/1
+            parents = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<ParentsOfStudentsDto>>>($"ParentsOfStudents/GetByStudentIdAsync/{personId}");
+            listParents = parents.Value.ToList();
+        }
+        catch (Exception ex)
+        {
+            _response = new("Ошибка отправление запроса на сервер", ex.Message);
+        }
+        StateHasChanged();
+    }
+    private async Task ParentInfo(int id)
+    {
+        personId = id;
+        _searchEntity = new();
+        parents = new();
+        listParents = new();
+        _response = new();
+        Navigation.NavigateTo($"/personInfo/{id}");
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,120 @@
+﻿@page "/mainAdmin/Tools/curriculum/create"
+
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.SharedPages
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+@using EducationSystem.Shared.InputData
+@using EducationSystem.Shared.InputData.ClassInput
+@using EducationSystem.Shared.Models
+@using EducationSystem.Shared.Models.ClassDto
+@using EducationSystem.Shared.OutputData
+@using EducationSystem.Shared.Role
+
+@inject NavigationManager Navigation
+
+<AdminNavMenu />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+
+<body class="adminPage">
+    <VertificationOfAuthorization _roleTypeId="1" />
+    <div class="content">
+        <h1>Создание учебного плана</h1>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Номер<span class="required-fill">*</span></td>
+                    <td><input type="text" @bind="_newEntity.Number" /></td>
+                </tr>
+                <tr>
+                    <td>Год формирования<span class="required-fill">*</span></td>
+                    <td><input type="text" @bind="_newEntity.YearFormation" /></td>
+                </tr>
+                <tr>
+                    <td>Количество четвертей в году<span class="required-fill">*</span></td>
+                    <td><input type="text" @bind="_newEntity.SystemTeaching" /></td>
+                </tr>
+                <tr>
+                    <td>Описание</td>
+                    <td><input type="text" @bind="_newEntity.Description" /></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="buttonPage" @onclick="Insert">Добавить</button>
+
+        @if ((_response.Error) || (_response.Value == null))
+        {
+            <div class="error">@_response.ErrorMessage</div>
+            <div>@_response.ErrorInfo</div>
+        }
+        else
+        {
+            <div class="success">учебный план успешно создан</div>
+        }
+
+        @* Таблица для вывода *@
+
+
+
+        <div class="padding-20"></div>
+
+        <div>Созданные пользователи</div>
+        <table class="fio-table">
+            <tr>
+                <th style="width:10%">Id</th>
+                <th style="width:15%">Номер</th>
+                <th style="width:25%">Год формирования</th>
+                <th style="width:10%">Количество учебных циклов в году</th>
+                <th style="width:25%">Описание</th>
+            </tr>
+            @foreach (var item in listOfNewEntity)
+            {
+                <tr>
+                    <td style="width:10%">@item.Id</td>
+                    <td style="width:15%">@item.Number</td>
+                    <td style="width:25%">@item.YearFormation</td>
+                    <td style="width:10%">@item.SystemTeaching</td>
+                    <td style="width:25%">@item.Description</td>
+                    <button style="background-image:url(image/icon_update.png);padding:12px 12px;background-size: cover;border:none; margin-left:5px" @onclick="@( () => ButtonUpdate(item.Id))"></button>
+                </tr>
+            }
+        </table>
+
+
+    </div>
+</body>
+
+@code {
+    CurriculumInput _newEntity = new();
+    List<CurriculumDto> listOfNewEntity = new();
+    Response<CurriculumDto> _response = new();
+
+    protected override async Task OnInitializedAsync(){ }
+    private async Task Insert()
+    {
+        try
+        {
+            using var request = await ClientInfo.Http.PostAsJsonAsync("Curriculum/Create", _newEntity);
+            request.EnsureSuccessStatusCode();
+            _response = await request.Content.ReadFromJsonAsync<Response<CurriculumDto>>();
+            if ((_response != null) && (!_response.Error))
+            {
+                listOfNewEntity.Add(_response.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            _response = new("Ошибка отправки запроса серверу", ex.Message);
+        }
+
+    }
+
+    // Кнопки
+    private void ButtonUpdate(int id)
+    {
+        Navigation.NavigateTo($"mainAdmin/Tools/curriculum/update/{id}");
+    }
+}

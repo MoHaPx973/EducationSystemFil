@@ -1,0 +1,43 @@
+﻿@page "/Tools/document/Main"
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.Pages.StudentPage.Helper
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+
+@inject NavigationManager Navigation
+
+<AdminNavMenu />
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <VertificationOfAuthorization _roleTypeId="1" />
+    <div class="content" style="font-size:24px">
+        <h1>Учебно-методический комплекс</h1>
+
+        <h3>Методический блок</h3>
+
+        <div class="link" @onclick="@( () => NextPage(0))">Учебники</div> @*админ по классам и по предметам*@
+
+        <div class="link" @onclick="@( () => NextPage(1))">Методические пособия</div> @*админ и учитель по классам и по предметам*@
+
+        <div class="link" @onclick="@( () => NextPage(2))">Поурочное планирование</div> @*админ и учитель по классам и по предметам*@
+
+        <h3>Нормативно-правовой блок</h3>
+
+        <div class="link" @onclick="@( () => NextPage(6))">Образовательные программы</div> @*админ и учитель по классам и по предметам*@
+        <div class="link" @onclick="@( () => NextPage(7))">ФГОС</div> @*админ*@
+
+
+    </div>
+</body>
+
+@code {
+    private int type;
+
+    private void NextPage(int type)
+    {
+        Navigation.NavigateTo($"/Tools/document/classSelect/{type}");
+    }
+}

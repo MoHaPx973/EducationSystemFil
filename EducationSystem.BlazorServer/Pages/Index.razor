@@ -1,0 +1,19 @@
+﻿@page "/"
+@using EducationSystem.BlazorServer.StaticHelpers
+
+@inject NavigationManager NavManager
+
+<h1>Hello, world!</h1>
+<div>authorization</div>
+<div>@ClientInfo.IsAuthenticated</div>
+<div>@ClientInfo.UserInfo.Login</div>
+
+<button class="login" @onclick="Method">К авторизации </button>
+
+@code
+{
+    private void Method()
+    {
+        NavManager.NavigateTo("/authorization");
+    }
+}

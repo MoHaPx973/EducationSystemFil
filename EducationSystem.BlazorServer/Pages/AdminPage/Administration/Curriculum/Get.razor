@@ -1,0 +1,265 @@
+﻿@page "/mainAdmin/Tools/curriculum"
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.Pages.SharedHelper
+@using EducationSystem.BlazorServer.SharedPages
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+@using EducationSystem.Shared.Models
+@using EducationSystem.Shared.Models.ClassDto
+@using EducationSystem.Shared.OutputData
+
+@inject NavigationManager Navigation
+
+
+<AdminNavMenu />
+<head>
+
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <VertificationOfAuthorization _roleTypeId="1" />
+    <div class="content">
+        <span class="filter">
+            <h3>Фильтр</h3>
+            <span>
+                Введите год для поиска
+                <input type="text" @bind="_newfilter.SelectValue1" />
+            </span>
+
+            <span>
+                По типу профиля
+                <select class="input-text-conf" @bind="_newfilter.SelectValue2">
+                    <option value="0">Не срытый</option>
+                    <option value="1">Скрытый</option>
+
+                </select>
+            </span>
+
+            <span>
+                <div class="padding-5"></div>
+                <button class="buttonFilter" @onclick="NewFilter">Применить</button>
+                <button class="buttonFilter" @onclick="ResetFilter">Сбросить</button>
+            </span>
+            <div class="padding-10"></div>
+        </span>
+
+        <p>
+            @if (_startDelete)
+            {
+                <div class="filter">
+                    <div style="font-size:20px">Вы действительно хотите удалить учебный план id=@_idDelete?</div>
+                    <div class="padding-10"></div>
+                    <button style="font-size:18px;color:red" @onclick="@( () => DeletePerson(_idDelete,true))">Да</button>
+                    <button style="font-size:18px" @onclick="@( () => DeletePerson(_idDelete,false))">Нет</button>
+                </div>
+            }
+        </p>
+
+        <div class="padding-5"> </div>
+
+        @if (CurrentPage != null)
+        {
+            @if ((CurrentPage.Value != null))
+            {
+                <table class="fio-table">
+                    <tr>
+                        <th style="width:10%">Id</th>
+                        <th style="width:20%">Номер</th>
+                        <th style="width:30%">Год формирования</th>
+                        <th style="width:10%">Количество учебных циклов в году</th>
+                        <th style="width:30%">Описание</th>
+                    </tr>
+                    @foreach (var item in CurrentPage.Value)
+                    {
+                        <tr>
+                            <td @onclick="@( () => ButtonUpdate(item.Id))">@item.Id</td>
+                            <td @onclick="@( () => ButtonUpdate(item.Id))">@item.Number</td>
+                            <td @onclick="@( () => ButtonUpdate(item.Id))">@item.YearFormation</td>
+                            <td @onclick="@( () => ButtonUpdate(item.Id))">@item.SystemTeaching</td>
+                            <td @onclick="@( () => ButtonUpdate(item.Id))">@item.Description</td>
+                            <button style="background-image:url(image/icon_update.png);padding:12px 12px;background-size: cover;border:none; margin-left:5px" @onclick="@( () => ButtonUpdate(item.Id))"></button>
+                            @if (entityIsHidden)
+                            {
+                                
+                                <button style="background-image:url(image/icon_eye.png);padding:12px 12px;background-size: cover;border:none; margin-left:5px" @onclick="@( () => ButtonHiddenAndReveal(item.Id))"></button>
+                                <button style="background-image:url(image/icon_delete.png);padding:12px 12px;background-size: cover;border:none; margin-left:5px" @onclick="@( () => ButtonDelete(item.Id))"></button>
+                               
+                            }
+                            else
+                            {
+                                <button style="background-image:url(image/icon_hidden.png);padding:12px 12px;background-size: cover;border:none; margin-left:5px" @onclick="@( () => ButtonHiddenAndReveal(item.Id))"></button>
+                            }
+                            <div class="padding-5"> </div>
+                        </tr>
+                    }
+                </table>
+
+            }
+            else
+            {
+                <LoadingPageLayout />
+            }
+        }
+        else
+        {
+            <div>Не найдено...</div>
+        }
+        <div class="padding-20"> </div>
+        <div class="buttonContainer">
+        <button class="buttonPage" @onclick="PreviousPage">Предыдущая страница </button>
+        <button class="buttonPage" @onclick="NextPage">Следующая страница </button>
+        </div>
+    </div>
+</body>
+
+
+
+@code {
+
+    Filter _filter = new();
+    Filter _newfilter = new();
+
+    private Response<IEnumerable<CurriculumDto>>? CurrentPage = new();
+    private Response<IEnumerable<CurriculumDto>>? SearchedPage = new();
+
+    private bool entityIsHidden;
+
+    int start = 0;
+    int count = 10;
+
+    private bool _startDelete = false;
+    int _idDelete;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _filter.SelectValue1 = 0;
+        entityIsHidden = false;
+        try
+        {
+            SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<CurriculumDto>>>
+                ($"Curriculum/GetPageEnumerableByYear/{_filter.SelectValue1}/{entityIsHidden}/{start}/{count}");
+            // Curriculum/GetPageEnumerableByYear/0/false/0/10
+            CurrentPage = SearchedPage;
+        }
+        catch
+        {
+            CurrentPage = new();
+        }
+
+    }
+    private async Task NextPage()
+    {
+        start++;
+        SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<CurriculumDto>>>
+               ($"Curriculum/GetPageEnumerableByYear/{_filter.SelectValue1}/{entityIsHidden}/{start}/{count}");
+        if (SearchedPage.Value.Count() != 0)
+        {
+            CurrentPage = SearchedPage; ;
+        }
+        else
+        {
+            SearchedPage = new();
+            start--;
+        }
+    }
+    private async Task PreviousPage()
+    {
+        start--;
+        if (start >= 0)
+        {
+            SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<CurriculumDto>>>
+                ($"Curriculum/GetPageEnumerableByYear/{_filter.SelectValue1}/{entityIsHidden}/{start}/{count}");
+            if (SearchedPage.Value != null)
+            {
+                CurrentPage = SearchedPage;
+            }
+            else
+            {
+                SearchedPage = new();
+                start++;
+            }
+        }
+        else
+        {
+            start++;
+        }
+    }
+
+    // Фильтры
+    private async Task NewFilter()
+    {
+        _filter = new(_newfilter);
+        entityIsHidden = (_filter.SelectValue2 != 0);
+        start = 0;
+        try
+        {
+            SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<CurriculumDto>>>
+                ($"Curriculum/GetPageEnumerableByYear/{_filter.SelectValue1}/{entityIsHidden}/{start}/{count}");
+            CurrentPage = SearchedPage;
+        }
+        catch
+        {
+
+        }
+    }
+    private async Task ResetFilter()
+    {
+        _filter = new();
+        _newfilter = new();
+        entityIsHidden = (_filter.SelectValue2 != 0);
+        start = 0;
+        SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<CurriculumDto>>>
+                ($"Curriculum/GetPageEnumerableByYear/{_filter.SelectValue1}/{entityIsHidden}/{start}/{count}");
+        CurrentPage = SearchedPage;
+    }
+
+    // Кнопки
+    private void ButtonUpdate(int id)
+    {
+        Navigation.NavigateTo($"mainAdmin/Tools/curriculum/update/{id}");
+    }
+    private async Task ButtonDelete(int id)
+    {
+        _idDelete = id;
+        _startDelete = true;
+    }
+    private async Task ButtonHiddenAndReveal(int id)
+    {
+        var _hiddenResponse = await ClientInfo.Http.DeleteFromJsonAsync<Response<CurriculumDto>>($"Curriculum/HideOrShow/{id}");
+        try
+        {
+            SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<CurriculumDto>>>
+              ($"Curriculum/GetPageEnumerableByYear/{_filter.SelectValue1}/{entityIsHidden}/{start}/{count}");
+            CurrentPage = SearchedPage;
+        }
+        catch
+        {
+            CurrentPage = new();
+        }
+    }
+
+    private async Task DeletePerson(int id, bool delete)
+    {
+        if (delete)
+        {
+            try
+            {
+                var _deleteResponse = await ClientInfo.Http.DeleteFromJsonAsync<Response<CurriculumDto>>($"Curriculum/Delete/{id}");
+                SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<CurriculumDto>>>
+                ($"Curriculum/GetPageEnumerableByYear/{_filter.SelectValue1}/{entityIsHidden}/{start}/{count}");
+                CurrentPage = SearchedPage;
+                _startDelete = false;
+                _idDelete = 0;
+            }
+            catch
+            {
+
+            }
+        }
+        else
+        {
+            _startDelete = false;
+            _idDelete = 0;
+        }
+    }
+}

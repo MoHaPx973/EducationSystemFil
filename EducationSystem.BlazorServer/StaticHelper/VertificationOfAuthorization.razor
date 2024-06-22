@@ -1,0 +1,21 @@
+﻿@page "/VertificationOfAuthorization/{_roleTypeId:int}"
+@using EducationSystem.BlazorServer.StaticHelpers
+@inject NavigationManager Navigation
+
+@code {
+    [Parameter]
+    public int _roleTypeId { get; set; }
+    protected override void OnInitialized()
+    {
+        if (ClientInfo.IsAuthenticated == false)
+        {
+            Navigation.NavigateTo("authorization");
+        }
+        else if (ClientInfo.UserInfo.Role.Priority != _roleTypeId)
+        {
+            Navigation.NavigateTo("authorization");
+        }
+
+    }
+
+}

@@ -1,0 +1,139 @@
+﻿@page "/document/list/{type:int}/{classNumber:int}/{item:int}"
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers;
+@using EducationSystem.Domain.Files;
+@using EducationSystem.Shared.Files;
+@using EducationSystem.Shared.OutputData;
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject NavigationManager Navigation
+
+<TeacherNavMenu />
+<VertificationOfAuthorization _roleTypeId="2" />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    
+    <div class="content" style="font-size:24px">
+        @if ((type != 3) && (type != 4) && (type != 5) && (type != 8) && (type != 9))
+        {
+            <h3 style="color:purple">
+                Основные документы
+            </h3>
+            @if ((ListAdminFilePath != null) && (ListAdminFilePath.Value != null))
+            {
+                @foreach (var item in ListAdminFilePath.Value)
+                {
+                    <div class="link"><a @onclick="@( () => GetFile(item.Id))">@item.Name</a></div>
+                }
+            }
+        }
+
+
+        @if ((type!=7))
+        {
+            <h3>
+                Загруженные документы
+            </h3>
+            @if ((ListFilePath != null) && (ListFilePath.Value != null))
+            {
+                @foreach (var item in ListFilePath.Value)
+                {
+                    <div class="link"><a @onclick="@( () => GetFile(item.Id))">@item.Name</a></div>
+                }
+            }
+            <InputFile OnChange="OnInputFile" />
+            <div class="padding-20"></div>
+            <button class="buttonPage" @onclick="SendToServer">Загрузить </button>
+        }
+       
+    </div>
+</body>
+
+@code {
+    [Parameter] public int type { get; set; }
+    [Parameter] public int classNumber { get; set; }
+    [Parameter] public int item { get; set; }
+    FileByte file = new();
+
+
+    FileByte fileByte = new();
+    Response<IEnumerable<FilePathDto>> ListFilePath = new();
+
+    Response<IEnumerable<FilePathDto>> ListAdminFilePath = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        file.PersonId = ClientInfo.UserInfo.LinkPerson.Id;
+        file.ClassNumber = classNumber;
+        file.TypeId = type;
+        file.ItemNumber = item;
+
+        try
+        {
+            using var request = await ClientInfo.Http.PostAsJsonAsync("FileData/GetByParams", file);
+            request.EnsureSuccessStatusCode();
+            ListFilePath = await request.Content.ReadFromJsonAsync<Response<IEnumerable<FilePathDto>>>();
+
+            file.PersonId = 0;
+            using var request2 = await ClientInfo.Http.PostAsJsonAsync("FileData/GetByParams", file);
+            request2.EnsureSuccessStatusCode();
+            ListAdminFilePath = await request2.Content.ReadFromJsonAsync<Response<IEnumerable<FilePathDto>>>();
+        }
+        catch
+        {
+
+        }
+
+    }
+
+    async Task OnInputFile(InputFileChangeEventArgs e)
+    {
+        var file = e.GetMultipleFiles().FirstOrDefault();
+        if (file == null)
+        {
+            return;
+        }
+        else
+        {
+            DateTime time = DateTime.Now;
+            fileByte.Name = file.Name;
+            using (var ms = new MemoryStream())
+            {
+                await file.OpenReadStream(maxAllowedSize: 5048000000).CopyToAsync(ms);
+                fileByte.Data = ms.ToArray();
+            }
+            fileByte.Path = @"TeacherFile";
+            fileByte.TypeId = type;
+            fileByte.ClassNumber = classNumber;
+            fileByte.ItemNumber = item;
+            fileByte.PersonId = ClientInfo.UserInfo.LinkPerson.Id;
+        }
+    }
+    private async Task SendToServer()
+    {
+        file.PersonId = ClientInfo.UserInfo.LinkPerson.Id;
+        using var request = await ClientInfo.Http.PostAsJsonAsync("FileData/Send", fileByte);
+        try
+        {
+            using var request1 = await ClientInfo.Http.PostAsJsonAsync("FileData/GetByParams", file);
+            request1.EnsureSuccessStatusCode();
+            ListFilePath = await request1.Content.ReadFromJsonAsync<Response<IEnumerable<FilePathDto>>>();
+
+        }
+        catch
+        {
+
+        }
+        StateHasChanged();
+    }
+    private void GetFile(int id)
+    {
+        Navigation.NavigateTo("http://localhost:9730/" + $"FileData/GetByPath/{id}");
+    }
+}

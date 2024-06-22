@@ -1,0 +1,141 @@
+﻿@page "/mainAdmin/Tools/student/create"
+
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.SharedPages
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+@using EducationSystem.Shared.InputData
+@using EducationSystem.Shared.Models
+@using EducationSystem.Shared.OutputData
+@using EducationSystem.Shared.Role
+
+@inject NavigationManager Navigation
+
+<AdminNavMenu />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+
+<body class="adminPage">
+    <VertificationOfAuthorization _roleTypeId="1" />
+    <div class="content">
+        <h1>Создание персоны</h1>
+            <table>
+                <tbody>
+                    <tr>
+                    <td>Фамилия<span class="required-fill">*</span></td>
+                        <td><input type="text" @bind="_newPerson.Surname" /></td>
+                    </tr>
+                    <tr>
+                    <td>Имя<span class="required-fill">*</span></td>
+                        <td><input type="text" @bind="_newPerson.Name" /></td>
+                    </tr>
+                    <tr>
+                    <td>Отчество<span class="required-fill">*</span></td>
+                        <td><input type="text" @bind="_newPerson.MiddleName" /></td>
+                    </tr>
+                    <tr>
+                    <td>Роль<span class="required-fill">*</span></td>
+                        <td>
+                            <select class="input-text-conf" @bind="_newPerson.RoleId">
+                                @if ((ListRole!=null)&&(ListRole.Value!=null))
+                                @foreach (var item in ListRole.Value)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        <button class="buttonPage" @onclick="Insert">Добавить</button>
+
+        @if ((_response.Error) || (_response.Value == null))
+        {
+            <div class="error">@_response.ErrorMessage</div>
+            <div>@_response.ErrorInfo</div>
+        }
+        else
+        {
+            <div class="success">Пользователь успешно создан</div>
+        }
+
+       @* Таблица для вывода *@
+
+
+
+            <div class="padding-20"></div>
+
+            <div>Созданные пользователи</div>
+            <table class="fio-table">
+            <tr>
+                <th style="width:10%">Id</th>
+                <th style="width:20%">Фамилия</th>
+                <th style="width:20%">Имя</th>
+                <th style="width:20%">Отчество</th>
+                <th style="width:10%">Id роли</th>
+                <th style="width:15%">Роль</th>
+            </tr>
+                @foreach (var item in listOfNewPersons)
+                {
+                    <tr>
+                    <td style="width:10%">@item.Id</td>
+                    <td style="width:20%">@item.Surname</td>
+                    <td style="width:20%">@item.Name</td>
+                    <td style="width:20%">@item.MiddleName</td>
+                    <td style="width:10%">@item.Role.Id</td>
+                    <td style="width:15%">@item.Role.Name</td>
+                    <button style="background-image:url(image/icon_update.png);padding:12px 12px;background-size: cover;border:none; margin-left:5px" @onclick="@( () => ButtonUpdate(item.Id))"></button>
+                    </tr>
+                }
+            </table>
+        
+
+    </div>
+</body>
+
+@code {
+    PersonInput _newPerson = new();
+    List<PersonDto> listOfNewPersons = new();
+    Response<PersonDto> _response = new();
+
+    Response<IEnumerable<UserRoleDto>> ListRole = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _newPerson.RoleId = 1;
+        try
+        {
+            ListRole = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<UserRoleDto>>>($"PersonRole/GetAllEnumerable");
+        }
+        catch(Exception ex)
+        {
+            _response = new("Ошибка отправки запроса серверу", ex.Message);
+        }
+    }
+    private async Task Insert()
+    {
+        try
+        {
+            using var request = await ClientInfo.Http.PostAsJsonAsync("Person/Create", _newPerson);
+            request.EnsureSuccessStatusCode();
+            _response = await request.Content.ReadFromJsonAsync<Response<PersonDto>>();
+            if ((_response != null)&&(!_response.Error))
+            {
+                listOfNewPersons.Add(_response.Value);
+            }
+        }
+        catch(Exception ex)
+        {
+            _response = new("Ошибка отправки запроса серверу", ex.Message);
+        }
+
+    }
+
+    // Кнопки
+    private void ButtonUpdate(int id)
+    {
+        Navigation.NavigateTo($"mainAdmin/Tools/student/update/{id}");
+    }
+}

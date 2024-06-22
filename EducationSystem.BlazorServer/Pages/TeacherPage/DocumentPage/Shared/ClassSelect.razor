@@ -1,0 +1,82 @@
+﻿@page "/document/classSelect/{type:int}"
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+
+@inject NavigationManager Navigation
+
+<TeacherNavMenu />
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <VertificationOfAuthorization _roleTypeId="2" />
+    <div class="content" style="font-size:24px">
+       <h3>
+            Начальное общее образование
+       </h3>
+       <div style="padding-left:20px">
+            <div class="link" @onclick="@( () => SelectClassNumberPrimory(1))">
+               1 класс
+           </div>
+            <div class="link" @onclick="@( () => SelectClassNumberPrimory(2))">
+                2 класс
+            </div>
+            <div class="link" @onclick="@( () => SelectClassNumberPrimory(3))">
+                3 класс
+            </div>
+            <div class="link" @onclick="@( () => SelectClassNumberPrimory(4))">
+                4 класс
+            </div>
+        </div>
+
+        <h3>
+            Основное общее образование
+        </h3>
+        <div style="padding-left:20px">
+            <div class="link" @onclick="@( () => SelectClassNumberBase(5))">
+                5 класс
+            </div>
+            <div class="link" @onclick="@( () => SelectClassNumberBase(6))">
+                6 класс
+            </div>
+            <div class="link" @onclick="@( () => SelectClassNumberBase(7))">
+                7 класс
+            </div>
+            <div class="link" @onclick="@( () => SelectClassNumberBase(8))">
+                8 класс
+            </div>
+            <div class="link" @onclick="@( () => SelectClassNumberBase(9))">
+                9 класс
+            </div>
+        </div>
+
+        <h3>
+            Среднее общее образование
+        </h3>
+        <div style="padding-left:20px">
+            <div class="link" @onclick="@( () => SelectClassNumberSecondary(10))">
+                10 класс
+            </div>
+            <div class="link" @onclick="@( () => SelectClassNumberSecondary(11))">
+                11 класс
+            </div>
+        </div>
+    </div>
+</body>
+
+@code {
+    [Parameter] public int type { get; set; }
+
+    private void SelectClassNumberPrimory(int classNumber)
+    {
+        Navigation.NavigateTo($"/document/itemSelect/primory/{type}/{classNumber}");
+    }
+    private void SelectClassNumberBase(int classNumber)
+    {
+        Navigation.NavigateTo($"/document/itemSelect/base/{type}/{classNumber}");
+    }
+    private void SelectClassNumberSecondary(int classNumber)
+    {
+        Navigation.NavigateTo($"/document/itemSelect/secondary/{type}/{classNumber}");
+    }
+}

@@ -1,0 +1,159 @@
+﻿@page "/mainAdmin/Tools/curriculum/update/{_curriculumId:int}"
+
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.SharedPages
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+@using EducationSystem.Shared.InputData
+@using EducationSystem.Shared.InputData.ClassInput
+@using EducationSystem.Shared.Models
+@using EducationSystem.Shared.Models.ClassDto
+@using EducationSystem.Shared.OutputData
+@using System.Text.Json
+@using EducationSystem.Shared.Relationships
+@using EducationSystem.Shared.Role
+
+<AdminNavMenu />
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPage">
+    <VertificationOfAuthorization _roleTypeId="1" />
+    <div class="content">
+        <h1>Изменение учебного плана</h1>
+        @if ((_searchEntity != null) && (_searchEntity.Value != null))
+        {
+            <span class="info">
+            <div>Учебный план номер @_searchEntity.Value.Number, сформированный в @_searchEntity.Value.YearFormation, разделен на @_searchEntity.Value.SystemTeaching учебных цикла</div>
+            <div>Дата создания: @_searchEntity.Value.DateCreate.ToString("dd/MM/yyyy")</div>
+            @if (!(_searchEntity.Value.DateUpdate==null))
+            {
+                <div>Дата последнего изменения: @_searchEntity.Value.DateUpdate</div>
+            }
+            @if (!(_searchEntity.Value.DateHidden == null))
+            {
+                <div>Дата скрытия учебного плана из списка: @_searchEntity.Value.DateHidden</div>
+            }
+            @if (!string.IsNullOrEmpty(_searchEntity.Value.Description))
+            {
+                <div>Описание: @_searchEntity.Value.Description</div>
+            }
+            </span>
+            <div class="padding-20"></div>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>Номер</td>
+                        <td><input type="text" @bind="_newEntity.Number" /></td>
+                    </tr>
+                    <tr>
+                        <td>Год</td>
+                        <td><input type="text" @bind="_newEntity.YearFormation" /></td>
+                    </tr>
+                    <tr>
+                        <td>Количество учебных циклов</td>
+                        <td><input type="text" @bind="_newEntity.SystemTeaching" /></td>
+                    </tr>
+                    <tr>
+                        <td>Описание</td>
+                        <td><input type="text" @bind="_newEntity.Description" /></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="buttonContainer">
+                <button class="buttonPage" @onclick="PersonUpdate">Изменить</button>
+                <button class="buttonPage" @onclick="PersonUpdate">Добавить предмет</button>
+            </div>
+            <div class="padding-20"></div>
+        }
+        else
+        {
+            <LoadingPageLayout />
+        }
+
+        @if ((_response.Error == true) || (_response.Value == null))
+        {
+            <div>@_response.ErrorMessage</div>
+            <div>@_response.ErrorInfo</div>
+        }
+        @if (check)
+        {
+            <div class="success">Обновлено</div>
+        }
+
+        @if ((_listItem != null) && (_listItem.Value != null) && (_listItem.Value.Count() != 0))
+        {
+            <table class="fio-table">
+                <tr>
+                    <th style="width:10%">Id</th>
+                    <th style="width:50%">Название</th>
+                    <th style="width:30%">Описание</th>
+                </tr>
+                @foreach (var item in _listItem.Value)
+                {
+                   @*  <tr @onclick="@( () => ButtonUpdate(item.Id))"> *@
+                    <tr>
+                        <td>@item.LinkItem.Id</td>
+                        <td>@item.LinkItem.Name</td>
+                        <td>@item.LinkItem.Description</td>
+                    </tr>
+                }
+            </table>
+        }
+
+    </div>
+</body>
+
+@code
+{
+    //http://localhost:9730/ItemInCurriculum/GetByCurriculumIdAsync/3
+
+    [Parameter]
+    public int _curriculumId { get; set; }
+    CurriculumInput _newEntity = new();
+    Response<CurriculumDto> _searchEntity = new();
+    Response<CurriculumDto> _response = new();
+
+    Response<IEnumerable<ItemInCurriculumDto>> _listItem = new();
+
+    bool check;
+    protected override async Task OnInitializedAsync()
+    {
+        check = false;
+        await Task.Delay(1000);
+        try
+        {
+            _searchEntity = await ClientInfo.Http.GetFromJsonAsync<Response<CurriculumDto>>($"Curriculum/FindById/{_curriculumId}");
+            _listItem = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<ItemInCurriculumDto>>>($"ItemInCurriculum/GetByCurriculumIdAsync/{_searchEntity.Value.Id}");
+    }
+        catch (Exception ex)
+        {
+            _response = new("Ошибка отправление запроса на сервер", ex.Message);
+        }
+    }
+    private async Task PersonUpdate()
+    {
+        if ((_newEntity.Number==0)&&(_newEntity.YearFormation==0)&&(_newEntity.SystemTeaching==0))
+        {
+            _response = new("Поля не заполнены", "");
+        }
+        else
+        {
+            try
+            {
+                using var request = await ClientInfo.Http.PutAsJsonAsync($"Curriculum/Update/{_curriculumId}", _newEntity);
+                request.EnsureSuccessStatusCode();
+                _response = await request.Content.ReadFromJsonAsync<Response<CurriculumDto>>();
+                if (_response != null)
+                {
+                    _searchEntity = _response;
+                    check = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _response = new("Ошибка обновления", ex.Message);
+            }
+        }
+    }
+}

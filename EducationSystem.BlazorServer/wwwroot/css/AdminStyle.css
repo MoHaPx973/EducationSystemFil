@@ -1,0 +1,328 @@
+﻿body {
+    background-color: #f1f7fe;
+    font-family: "Calibri", sans-serif;
+    font-size: 16px;
+    color: darkblue;
+}
+button {
+    background-color: #8189c7; /* Blue */
+    border-radius: 8px;
+    border: none;
+    color: white;
+    padding: 16px 32px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    margin: 4px 2px;
+
+}
+
+.transparent-vertical-table {
+    border-collapse: collapse;
+    width: 200px;
+}
+
+    .transparent-vertical-table th, .transparent-vertical-table td {
+        text-align: left; /* выравнивание текста по левому краю */
+        padding: 8px; /* отступы внутри ячеек */
+    }
+
+    .transparent-vertical-table th {
+        background-color: rgba(242, 242, 242, 0.7); /* прозрачный цвет фона заголовков */
+        color: #333; /* цвет текста заголовков */
+    }
+
+    .transparent-vertical-table td {
+        background-color: rgba(255, 255, 255, 0.5); /* прозрачный цвет фона ячеек */
+        color: #333; /* цвет текста ячеек */
+    }
+
+/*фильтр*/
+.filter {
+    width: 14%;
+}
+
+    .filter span {
+        margin-left: 10px;
+    }
+
+    .filter label {
+        margin-left: 20px;
+    }
+
+    .filter div {
+
+        margin-top:10px;
+    }
+
+    .filter h3 {
+        margin-left: 10px;
+    }
+
+.buttonFilter {
+    margin-left: 10px;
+}
+
+
+/*button*/
+.buttonContainer {
+    display: flex;
+}
+
+.buttonPage {
+    background-color: #8189c7; /* Blue */
+    border-radius: 8px;
+    border: none;
+    color: white;
+    padding: 16px 32px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    margin: 4px 2px;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    cursor: pointer;
+    width: 185px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.custom-table-head {
+    font-weight:600;
+    color:blue;
+}
+.custom-black-line {
+    border-top: 1px solid #000; /* Устанавливаем черную линию над первой строкой */
+}
+
+/*table admin*/
+.table {
+    font-size: 18px;
+    width: 50%;
+    font-size: 24px;
+    width: 50%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+    .table th, .table td {
+        width: 100px;
+        text-align:left;
+    }
+
+    .table th {
+        font-weight: bold;
+    }
+
+    .table td {
+        table-layout: fixed;
+    }
+
+        .table td a:link { /* ссылка в обычном состоянии */
+            color: blue;
+            text-decoration: none; /* убираем подчеркивание */
+        }
+
+        .table td a:visited { /* посещенная ссылка */
+            color: blue;
+            color: inherit; /* наследуем цвет текста от родительского элемента */
+        }
+
+.fio-table {
+    width: 75%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Фиксированная ширина */
+    border:1px solid black;
+    font-family:Arial;
+}
+
+    .fio-table th, .fio-table td {
+        text-align: center;
+        padding: 10px;
+        border: 1px solid #ccc;
+    }
+
+    .fio-table th {
+        background-color: #8189c7;
+        color:white;
+        color: #333;
+        border-bottom: 2px solid #333;
+    }
+
+    .fio-table td {
+        background-color: #ffffff;
+        color: #333;
+    }
+
+    .fio-table tr:first-child {
+        font-weight: bold;
+    }
+
+
+
+.padding-20 {
+    padding: 20px;
+}
+
+.padding-10 {
+    padding: 10px;
+}
+
+.padding-5 {
+    padding: 5px;
+}
+
+.error {
+    color: red;
+    font-size: 24px;
+}
+.required-fill {
+    color: darkred;
+}
+
+.success {
+    color: darkgreen;
+    font-size: 24px;
+}
+
+.input-text-conf {
+    width: 150px;
+    font-size: 16px;
+}
+
+.red {
+    background-color: red;
+}
+
+.red-point {
+    color: red;
+}
+.orange-point {
+    color: orange;
+}
+.greenyellow-point {
+    color: darkgreen;
+}
+.green-point {
+    color: forestgreen;
+}
+
+
+.blue {
+    background-color: blue;
+}
+
+.info {
+    font-size: 18px;
+    font-weight:550px;
+}
+
+.assessment-table {
+    width: 75%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Фиксированная ширина */
+    border: 1px solid black;
+    font-family: Arial;
+}
+
+    .assessment-table th, .assessment-table td {
+        text-align: center;
+        padding: 10px;
+        border: 1px solid #ccc;
+    }
+
+    .assessment-table th {
+        color: white;
+        color: #333;
+        border: 2px solid #333;
+    }
+
+    .assessment-table td {
+        background-color: #ffffff;
+        color: #333;
+    }
+
+    .assessment-table tr:first-child {
+        font-weight: bold;
+    }
+
+.container {
+    display: flex;
+}
+
+table.iksweb {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    table.iksweb, table.iksweb td, table.iksweb th {
+        border: 1px solid #595959;
+        border: 1px solid black;
+        padding: 8px;
+
+    }
+
+        table.iksweb td, table.iksweb th {
+            padding: 3px;
+            height: 35px;
+        }
+
+
+
+
+.gray-square {
+    width: 300px;
+    height: 150px;
+    background-color: #819bc7;
+    position: relative;
+    color: white;
+    text-align: center;
+    line-height: 100px;
+}
+
+.user-info {
+    font-size: 24px;
+    background-color: #aaafd9;
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+    text-align: center;
+}
+
+    .user-info h2 {
+        font-size: 1.5em;
+        color: #162030;
+    }
+
+    .user-info p {
+        font-size: 1em;
+        color: #162030;
+    }
+
+    .user-info img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 20px;
+    }
+
+    .user-info a {
+        text-decoration: none;
+        color: #007bff;
+        display: block;
+        margin-top: 10px;
+    }
+
+    .link {
+        color: black;
+        transition: color 0.3s;
+    }
+        .link:hover {
+            color: darkslateblue;
+            cursor: pointer;
+        }

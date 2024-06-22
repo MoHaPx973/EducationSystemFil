@@ -1,0 +1,301 @@
+﻿@page "/mainAdmin/Tools/Schedule/"
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.Pages.StudentPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers;
+@using EducationSystem.Shared.Models.ClassDto;
+@using EducationSystem.Shared.Models.ScheduleDto;
+@using EducationSystem.Shared.OutputData;
+@using EducationSystem.Shared.Relationships;
+
+@inject NavigationManager Navigation
+
+<AdminNavMenu />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+
+<body class="adminPages">
+    <VertificationOfAuthorization _roleTypeId="1" />
+    <div class="content" style="font-size:20px">
+
+        <h2>Выберите класс</h2>
+        <div class="padding-5"></div>
+        <span>
+            <select class="input-text-conf" @onchange="GetClass">
+                <option value="2013">2013</option>
+                <option value="2014">2014</option>
+                <option value="2015">2015</option>
+                <option value="2016">2016</option>
+                <option value="2017">2017</option>
+                <option value="2018">2018</option>
+                <option value="2019">2019</option>
+                <option value="2020">2020</option>
+                <option value="2021">2021</option>
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+            </select>
+        </span>
+        <span> </span>
+        @if ((year != 0) && (ClassList != null) && (ClassList.Value != null))
+        {
+            <span>
+                <select class="input-text-conf" @onchange="GetSchedule">
+                    <option value="0">-</option>
+                    @foreach (var item in ClassList.Value)
+                    {
+                        <option value="@item.Id">@item.Number @item.Letter</option>
+                    }
+                </select>
+            </span>
+        }
+        <span> </span>
+        <div class="padding-5"></div>
+
+        @if (selectClassId != 0)
+        {
+            <button class="" @onclick="Get">Показать</button>
+        }
+
+        @if (flag == true)
+        {
+
+
+            @if ((lessons != null) && (lessons.Value != null))
+            {
+                <div style="display:flex; flex-wrap:wrap; color: black">
+                    @foreach (var item in weekDays)
+                    {
+                        <table class="iksweb">
+                            <tbody>
+                                <tr>
+                                    <td style="font-size:24px;text-align:center;background-color:#8189c7;color: white;" colspan="6">@item.DayWeekName @item.Date.Date.Day.@item.Date.Date.Month.@item.Date.Date.Year
+                                        <button @onclick="@( () => Create(item.Id))">Редактировать</button>
+                                    </td>
+                                </tr>
+                                <tr>
+
+                                    <td style="background-color:#aaafd9;color:white;width:30px">Урок</td>
+                                    <td style="background-color:#aaafd9;color:white;width:150px">Предмет</td>
+                                    <td style="background-color:#aaafd9;color:white;width:150px">Кабинет</td>
+                                    <td style="background-color:#aaafd9;color:white;width:150px">Учитель</td>
+                                    <td style="background-color:#aaafd9;color:white;width:30px">Начало</td>
+                                    <td style="background-color:#aaafd9;color:white;width:30px">Конец</td>
+                                </tr>
+                                @foreach (var item2 in lessonsTime.Value)
+                                {
+                                    <tr>
+                                        <td style="background-color:#e0e2f1">
+                                            @item2.Number
+                                        </td>
+                                        <td>
+                                            @if (@GetLesson(item, item2) != null)
+                                            {
+                                                @GetLesson(item,item2).LinkItem.Name
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (@GetLesson(item, item2).RoomNumber.Number != 0)
+                                            {
+                                                @GetLesson(item,item2).RoomNumber.Number
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (@GetLesson(item, item2) != null)
+                                            {
+                                                <span>@GetLesson(item,item2).Teacher.Surname </span>
+                                                <span>@GetLesson(item,item2).Teacher.Name </span>
+                                                <span>@GetLesson(item,item2).Teacher.MiddleName </span>
+                                            }
+                                        </td>
+                                        <td>@item2.StartTime</td>
+                                        <td>@item2.EndTime</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="padding-10"></div>
+                    }
+
+                </div>            <span style="display:flex">
+                    <button class="buttonPage" @onclick="PreviousWeek">Предыдущая неделя</button>
+                    <button class="buttonPage" @onclick="NextWeek">Следующая неделя</button>
+                    <button class="buttonPage" @onclick="ThisWeek">Текущая неделя</button>
+                </span>
+            }
+        }
+    </div>
+</body>
+
+@code {
+    DateTime today = DateTime.Today;
+    private int todayId;
+    Response<IEnumerable<LessonInSсheduleDto>> lessons = new();
+    StudyDayDto studyDayToday = new();
+    List<LessonInSсheduleDto> lessonsThisWeek = new();
+    Response<ClassScheduleDto> schedule = new();
+    Response<IEnumerable<StudyDayDto>> days = new();
+    List<StudyDayDto> weekDays = new();
+    Response<IEnumerable<LessonTimeDto>> lessonsTime = new();
+
+    private bool selectClass = false;
+    private int year = 0;
+    private int selectClassId = 0;
+    private bool flag = false;
+    Response<IEnumerable<SchoolClassDto>> ClassList = new();
+    Response<IEnumerable<StudentInClassDto>> StudentList = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+    private LessonInSсheduleDto GetLesson(StudyDayDto day, LessonTimeDto time)
+    {
+        //return lessonsThisWeek.Where(d => d.Day == day).FirstOrDefault(t => t.Time == time);
+        LessonInSсheduleDto output = new();
+        foreach (var item in lessonsThisWeek)
+        {
+            if (item.Day.Date == day.Date)
+            {
+                if (item.Time.Number == time.Number)
+                {
+                    output = item;
+                }
+            }
+        }
+        return output;
+    }
+
+    private void NextWeek()
+    {
+        today = today.AddDays(7);
+        studyDayToday = new();
+        lessonsThisWeek = new();
+        weekDays = new();
+        try
+        {
+            studyDayToday = days.Value.FirstOrDefault(d => d.Date == today);
+            if (studyDayToday == null)
+            {
+                today = today.AddDays(-1);
+                studyDayToday = days.Value.FirstOrDefault(d => d.Date == today);
+            }
+            foreach (var item in lessons.Value)
+            {
+                if (item.Day.WeekNumber == studyDayToday.WeekNumber)
+                {
+                    lessonsThisWeek.Add(item);
+                }
+            }
+            weekDays = days.Value.Where(w => w.WeekNumber == studyDayToday.WeekNumber).ToList();
+            StateHasChanged();
+        }
+        catch { }
+    }
+    private void PreviousWeek()
+    {
+        today = today.AddDays(-7);
+        studyDayToday = new();
+        lessonsThisWeek = new();
+        weekDays = new();
+        try
+        {
+            studyDayToday = days.Value.FirstOrDefault(d => d.Date == today);
+            if (studyDayToday == null)
+            {
+                today = today.AddDays(-1);
+                studyDayToday = days.Value.FirstOrDefault(d => d.Date == today);
+            }
+            foreach (var item in lessons.Value)
+            {
+                if (item.Day.WeekNumber == studyDayToday.WeekNumber)
+                {
+                    lessonsThisWeek.Add(item);
+                }
+            }
+            weekDays = days.Value.Where(w => w.WeekNumber == studyDayToday.WeekNumber).ToList();
+            StateHasChanged();
+        }
+        catch { }
+    }
+    private void ThisWeek()
+    {
+        today = DateTime.Today;
+        studyDayToday = new();
+        lessonsThisWeek = new();
+        weekDays = new();
+        try
+        {
+            studyDayToday = days.Value.FirstOrDefault(d => d.Date == today);
+            if (studyDayToday == null)
+            {
+                today = today.AddDays(-1);
+                studyDayToday = days.Value.FirstOrDefault(d => d.Date == today);
+            }
+            foreach (var item in lessons.Value)
+            {
+                if (item.Day.WeekNumber == studyDayToday.WeekNumber)
+                {
+                    lessonsThisWeek.Add(item);
+                }
+            }
+            weekDays = days.Value.Where(w => w.WeekNumber == studyDayToday.WeekNumber).ToList();
+            StateHasChanged();
+        }
+        catch { }
+    }
+
+    private async Task GetClass(ChangeEventArgs e)
+    {
+        flag = false;
+        selectClassId = 0;
+        ClassList = new();
+        StudentList = new();
+        year = int.Parse(e.Value.ToString());
+        ClassList = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<SchoolClassDto>>>($"SchoolClass/GetAllByYear/{year}");
+    }
+    private async void GetSchedule(ChangeEventArgs e)
+    {
+        flag = false;
+        selectClassId = int.Parse(e.Value.ToString());
+        try
+        {
+            lessonsTime = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<LessonTimeDto>>>("LessonTime/GetAllEnumerable");
+            days = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<StudyDayDto>>>("StudyDay/GetAll");
+            schedule = await ClientInfo.Http.GetFromJsonAsync<Response<ClassScheduleDto>>($"ClassSchedule/GetByClassId/{selectClassId}");
+            lessons = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<LessonInSсheduleDto>>>($"LessonInSсhedule/GetAllByScheduleId/{schedule.Value.Id}");
+        }
+        catch { }
+        try
+        {
+            studyDayToday = days.Value.FirstOrDefault(d => d.Date == today);
+            if (studyDayToday == null)
+            {
+                today = today.AddDays(-1);
+                studyDayToday = days.Value.FirstOrDefault(d => d.Date == today);
+            }
+            foreach (var item in lessons.Value)
+            {
+                if (item.Day.WeekNumber == studyDayToday.WeekNumber)
+                {
+                    lessonsThisWeek.Add(item);
+                }
+            }
+            weekDays = days.Value.Where(w => w.WeekNumber == studyDayToday.WeekNumber).ToList();
+        }
+        catch { }
+    }
+    private void Get()
+    {
+        flag = true;
+    }
+    private void Create(int dayId)
+    {
+        int a = dayId;
+        int b = schedule.Value.Id;
+        Navigation.NavigateTo($"mainAdmin/Tools/Schedule/Create/{a}/{b}");
+    }
+}

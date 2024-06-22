@@ -1,0 +1,280 @@
+﻿@page "/mainParent/Tools/assessment"
+@using EducationSystem.BlazorServer.Pages.ParentPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+@using EducationSystem.Shared.InputData.Assessment;
+@using EducationSystem.Shared.Models
+@using EducationSystem.Shared.Models.AssessmentDto;
+@using EducationSystem.Shared.OutputData
+@using EducationSystem.Shared.Relationships;
+
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<ParentNavMenu />
+<VertificationOfAuthorization _roleTypeId="4" />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+
+<body class="content" style="font-size:20px">
+
+    
+    @if ((childrenList != null) && (childrenList.Count != 0) && (selectChildId==0))
+    {
+        <h2>Выберите ребенка</h2>
+        <span>
+            <select class="input-text-conf" @onchange="SelectChildId">
+                <option value="0">Не выбрано</option>
+                @foreach (var item in childrenList)
+                {
+                    <option value="@item.StudentId">@item.Student.Surname @item.Student.Name</option>
+                }
+            </select>
+        </span>
+    }
+    else if (selectChildId==0)
+    {
+        <div>Не найдено информации о детях</div>
+    }
+
+    @if ((selectChildId!=0)&&(selectChild!=null))
+    {
+        <h1>Оценки @selectChild.Surname @selectChild.Name</h1>
+        <h2>Выберите класс и цикл</h2>
+        <div class="padding-5"></div>
+        @if ((_classes != null) && (_classes.Value != null))
+        {
+            <span>
+                <select class="input-text-conf" @onchange="GetClassSystemTeaching" id="inputSelectClass">
+                    <option value="0">Не выбрано</option>
+                    @foreach (var item in _classes.Value)
+                    {
+                        <option value="@item.ClassId">@item.SchoolClass.Number @item.SchoolClass.Letter</option>
+                    }
+                </select>
+            </span>
+            <span> </span>
+            @if (selectClassId != 0)
+            {
+                <span>
+                    <select class="input-text-conf" @bind="selectedSystemTeaching">
+                        @for (int i = 1; i <= systemTeaching; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </span>
+            }
+            <div class="padding-5"></div>
+            @if (selectedSystemTeaching != 0)
+            {
+                <button @onclick="GetAssessment">Показать</button>
+            }
+        }
+        <div class="padding-10"></div>
+        @if ((_assessments != null) && (_assessments.Value != null) && (_items != null) && (_items.Value != null))
+        {
+            <div class="container">
+                <table class="assessment-table">
+                    <tr>
+                        <th width="25%">Предмет</th>
+                        <td colspan="@lineLength">Оценки</td>
+                        <td width="10%">Средняя</td>
+                        <td width="10%">Итоговая</td>
+                    </tr>
+                    @foreach (var item in _items.Value)
+                    {
+                        <tr>
+                            <th>@item.LinkItem.Name</th>
+                            @foreach (var item2 in _assessments.Value.Where(i => i.LinkItem.ItemId == item.ItemId).ToList())
+                            {
+                                <td @onclick="@( () => AssessmentInfo(item2.Id))"><div class="@AssesmentColor(item2.Point)">@item2.Point</div></td>
+                            }
+                            @for (int i = 0; i < (lineLength - (_assessments.Value.Where(i => i.LinkItem.ItemId == item.ItemId).ToList().Count)); i++)
+                            {
+                                <td></td>
+                            }
+                            <td>
+                                <div class="@AssesmentColor(AverageRating(_assessments.Value.Where(i => i.LinkItem.ItemId == item.ItemId).ToList()))">
+                                    @AverageRating(_assessments.Value.Where(i => i.LinkItem.ItemId == item.ItemId).ToList())
+                                </div>
+                            </td>
+                            <td>
+                                <div class="@AssesmentColor(AverageRating(_assessments.Value.Where(i => i.LinkItem.ItemId == item.ItemId).ToList()))">
+                                    @FinalRating(_assessments.Value.Where(i => i.LinkItem.ItemId == item.ItemId).ToList())
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </table>
+
+                <div class="gray-square" style="margin-left: 20px;">
+                    @if ((info != null))
+                    {
+                        @if ((info == "") || (info == string.Empty) || (string.IsNullOrEmpty(info)))
+                        {
+                            <p style="margin-top: 10px;">Описания нет</p>
+                        }
+                        else
+                        {
+                            <p style="margin-top: 10px;">@info</p>
+                        }
+                        @if ((assessment != null) && (assessment.Value != null))
+                        {
+                            <button class="" @onclick="AssessmentInfoPage">Подробнее</button>
+                        }
+                    }
+                    else
+                    {
+                        <div width="30px"></div>
+                    }
+
+                </div>
+            </div>
+        }
+    }
+    
+</body>
+
+@code {
+    Response<IEnumerable<ParentsOfStudentsDto>> children = new();
+    List<ParentsOfStudentsDto> childrenList = new();
+    PersonDto selectChild = new();
+    int selectChildId = 0;
+
+    //selectChild = new ();
+    //selectChildId = 0;
+
+    Response<PersonDto> _person = new();
+    Response<IEnumerable<StudentInClassDto>> _classes = new();
+    private int selectClassId = 0;
+    private int systemTeaching = 0;
+    private int selectedSystemTeaching = 0;
+    private Response<IEnumerable<FinalAssessmentDto>> _assessments = new();
+    Response<IEnumerable<ItemInCurriculumDto>> _items = new();
+    private bool FinalTable = false;
+    private string info = "";
+    private Response<FinalAssessmentDto> assessment = new();
+
+    private int lineLength;
+    private double averageRating;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            children = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<ParentsOfStudentsDto>>>($"ParentsOfStudents/GetByParentIdAsync/{ClientInfo.UserInfo.LinkPerson.Id}");
+            childrenList = children.Value.ToList();
+        }
+        catch
+        {
+            childrenList = null;
+        }
+    }
+    private void GetClassSystemTeaching(ChangeEventArgs e)
+    {
+        assessment = new();
+        info = "";
+        try
+        {
+            selectClassId = int.Parse(e.Value.ToString());
+            systemTeaching = _classes.Value.FirstOrDefault(i => i.ClassId == selectClassId).SchoolClass.LinkCurriculum.SystemTeaching;
+        }
+        catch
+        {
+            selectClassId = 0;
+            systemTeaching = 0;
+        }
+    }
+    private async Task GetAssessment()
+    {
+        assessment = new();
+        info = "";
+        lineLength = 0;
+        if (selectClassId != 0)
+            _items = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<ItemInCurriculumDto>>>($"ItemInCurriculum/GetByCurriculumIdAsync/{_classes.Value.FirstOrDefault(i => i.ClassId == selectClassId).SchoolClass.LinkCurriculum.Id}");
+        _assessments = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<FinalAssessmentDto>>>($"FinalAssessment/GetByStudentIdClassIdSystemTeachingNumber/{selectChildId}/{selectClassId}/{selectedSystemTeaching}");
+        @foreach (var item in _items.Value)
+        {
+            if (lineLength < _assessments.Value.Where(i => i.LinkItem.ItemId == item.ItemId).ToList().Count)
+            {
+                lineLength = _assessments.Value.Where(i => i.LinkItem.ItemId == item.ItemId).ToList().Count;
+            }
+        }
+    }
+
+    private double AverageRating(IEnumerable<FinalAssessmentDto> assessment)
+    {
+        averageRating = 0;
+        foreach (var item in assessment)
+        {
+            averageRating += item.Point;
+        }
+        double output = Math.Round((averageRating / assessment.Count()), 1);
+        if (Double.IsNaN(output))
+            return 0;
+        return output;
+    }
+
+    private int FinalRating(IEnumerable<FinalAssessmentDto> assessment)
+    {
+        averageRating = 0;
+        foreach (var item in assessment)
+        {
+            averageRating += item.Point;
+        }
+        int output = (int)Math.Round((averageRating / assessment.Count()), MidpointRounding.AwayFromZero);
+        if (output < 0)
+            return 0;
+        return (int)Math.Round((averageRating / assessment.Count()), MidpointRounding.AwayFromZero);
+    }
+    private string AssesmentColor(double point)
+    {
+        point = (int)Math.Round(point, MidpointRounding.AwayFromZero);
+        switch (point)
+        {
+            case 5:
+                return "green-point";
+            case 4:
+                return "greenyellow-point";
+            case 3:
+                return "orange-point";
+            case 2:
+                return "red-point";
+            default:
+                return "";
+        }
+    }
+    private void AssessmentInfoPage()
+    {
+        Navigation.NavigateTo($"mainParent/Tools/assessmentInfo/{assessment.Value.Id}");
+    }
+    private async Task AssessmentInfo(int id)
+    {
+        try
+        {
+            info = "";
+            //SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<PersonDto>>>
+            //    ($"Person/GetPageEnumerableByParams/{start}/{count}/{_filter.SelectValue1}/{personIsHidden}/{_filter.SelectValue2}");
+            assessment = await ClientInfo.Http.GetFromJsonAsync<Response<FinalAssessmentDto>>($"FinalAssessment/GetById/{id}");
+            info = assessment.Value.Description;
+            StateHasChanged();
+        }
+        catch { }
+    }
+    private async Task SelectChildId(ChangeEventArgs e)
+    {
+
+        selectChildId = int.Parse(e.Value.ToString());
+        selectChild = childrenList.FirstOrDefault(i=>i.StudentId == selectChildId).Student;
+
+        _person = await ClientInfo.Http.GetFromJsonAsync<Response<PersonDto>>($"Person/FindById/{selectChildId}");
+        _classes = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<StudentInClassDto>>>($"StudentInClass/GetAllEnumerableByStudentId/{selectChildId}");
+        assessment = new();
+        selectClassId = 0;
+        selectedSystemTeaching = 0;
+        StateHasChanged();
+    }
+}

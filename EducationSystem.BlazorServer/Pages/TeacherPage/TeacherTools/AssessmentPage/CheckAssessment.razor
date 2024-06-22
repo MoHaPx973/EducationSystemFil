@@ -1,0 +1,143 @@
+﻿@page "/mainTeacher/assessment/check"
+@using EducationSystem.BlazorServer.Pages.StudentPage.Helper
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers;
+@using EducationSystem.Shared.Models.ClassDto;
+@using EducationSystem.Shared.OutputData;
+@using EducationSystem.Shared.Relationships;
+
+
+
+@inject NavigationManager Navigation
+
+<TeacherNavMenu />
+<VertificationOfAuthorization _roleTypeId="2" />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+
+<body class="content">
+
+    <h2>Выберите класс</h2>
+    <div class="padding-5"></div>
+    <span>
+        <select class="input-text-conf" @onchange="GetClass">
+            <option value="2013">2013</option>         
+            <option value="2014">2014</option>
+            <option value="2015">2015</option>
+            <option value="2016">2016</option>
+            <option value="2017">2017</option>
+            <option value="2018">2018</option>
+            <option value="2019">2019</option>
+            <option value="2020">2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+        </select>
+    </span>
+    <span> </span>
+    @if ((year != 0) && (ClassList != null) && (ClassList.Value != null))
+    {
+        <span>
+            <select class="input-text-conf" @onchange="GetStudents">
+                <option value="0">-</option>
+                @foreach (var item in ClassList.Value)
+                {
+                    <option value="@item.Id">@item.Number @item.Letter</option>
+                }
+            </select>
+        </span>
+    }
+    <span> </span>
+    <div class="padding-5"></div>
+    @if (selectClassId!=0)
+    {
+        <button class="" @onclick="Get">Показать</button>
+    }
+    <div class="padding-5"></div>
+    @if (flag)
+    {
+        @if ((StudentList != null))
+        {
+            @if (StudentList.Value != null)
+            {
+                <table class="fio-table">
+                    <tbody>
+                        <tr>
+                            <td width="80%">ФИО</td>
+                            <td></td>
+                        </tr>
+                        @foreach (var item in StudentList.Value)
+                        {
+                            <tr>
+                                <td width="20px">
+                                    <div class="link" @onclick="@( () => PersonInfo(item.Student.Id))">
+                                        @item.Student.Surname @item.Student.Name @item.Student.MiddleName
+                                    </div>
+                                    
+                                     
+                                </td>
+                                <td><button @onclick="@( () => NavigateTo(item.Student.Id))">Подробнее</button></td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="error">@StudentList.ErrorMessage</div>
+                <div class="error">@StudentList.ErrorInfo</div>
+            }
+        }
+        else
+        {
+            <div>Загрузка</div>
+        }
+    }
+</body>
+
+@code {
+    private int year = 0;
+    private int selectClassId = 0;
+    private bool flag = false;
+    Response<IEnumerable<SchoolClassDto>> ClassList = new();
+    Response<IEnumerable<StudentInClassDto>> StudentList = new();
+
+    private async Task GetClass(ChangeEventArgs e)
+    {
+        flag = false;
+        selectClassId = 0;
+        ClassList = new();
+        StudentList = new();
+        year = int.Parse(e.Value.ToString());
+        ClassList = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<SchoolClassDto>>>($"SchoolClass/GetAllByYear/{year}");
+    }
+    private async void GetStudents(ChangeEventArgs e)
+    {
+        flag = false;
+        StudentList = new();
+        selectClassId = int.Parse(e.Value.ToString());
+        try
+        {
+            StudentList = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<StudentInClassDto>>>
+                ($"StudentInClass/GetAllEnumerableByClassId/{selectClassId}");
+        }
+        catch{}
+    }
+    private void Get()
+    {
+        flag = true;
+    }
+    private void NavigateTo(int studentId)
+    {
+        Navigation.NavigateTo($"mainTeacher/assessment/checkStudent/{studentId}");
+    }
+    private void PersonInfo(int id)
+    {
+        Navigation.NavigateTo($"/personInfo/{id}");
+    }
+}

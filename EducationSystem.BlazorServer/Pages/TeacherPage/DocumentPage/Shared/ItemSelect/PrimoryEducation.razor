@@ -1,0 +1,68 @@
+﻿@page "/document/itemSelect/primory/{type:int}/{classNumber:int}"
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+
+@inject NavigationManager Navigation
+
+<TeacherNavMenu />
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <VertificationOfAuthorization _roleTypeId="2" />
+    <div class="content" style="font-size:24px">
+        <h3>
+            Начальное общее образование
+        </h3>
+        <div style="padding-left:20px">
+            <div class="link" @onclick="@( () => SelectItemNumber(1))">
+                Русский язык
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(2))">
+                Литературное чтение
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(3))">
+                Родной язык
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(4))">
+                Литературное чтение на родном языке
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(5))">
+                Иностранный язык
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(6))">
+                Математика
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(7))">
+                Окружающий мир
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(8))">
+                Основы религиозных культур и светской этики
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(9))">
+                Музыка
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(10))">
+                Изобразительное искусство
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(11))">
+                Технология
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(12))">
+                Физическая культура
+            </div> 
+        </div>
+
+        
+    </div>
+</body>
+
+@code {
+    [Parameter] public int type { get; set; }
+    [Parameter] public int classNumber { get; set; }
+
+    private void SelectItemNumber(int itemNumber)
+    {
+        Navigation.NavigateTo($"/document/list/{type}/{classNumber}/{itemNumber}");
+    }
+}

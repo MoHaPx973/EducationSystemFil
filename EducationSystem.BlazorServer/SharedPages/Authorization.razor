@@ -1,0 +1,115 @@
+﻿@page "/authorization"
+
+@using System.Net.Http
+@using EducationSystem.BlazorServer.StaticHelpers
+@using EducationSystem.Shared.Auth
+@using EducationSystem.Shared.Models
+@using EducationSystem.Shared.OutputData
+@using EducationSystem.Shared.Role
+
+@inject NavigationManager Navigation
+@inject HttpClient Http
+
+<link rel="stylesheet" href="css/AuthStyle.css">
+
+<body>
+    <div class="screen-1">
+        <h1 class="Welcome">Добро пожаловать</h1>
+        <div class="email">
+            <label for="email">Логин</label>
+            <input type="text" @bind="inputLogin" />
+        </div>
+        <div class="password">
+            <label for="password">Пароль</label>
+            <input type="text" @bind="inputPassword" />
+        </div>
+        <button class="login" @onclick="MethodAuthorization">Войти </button>
+        <div class="footer">При возникновение проблем со входом, обратитесь к техническому администратору</div>
+
+
+        @if (Output.Error == true)
+        {
+            <div class="error">@Output.ErrorMessage</div>
+            <div class="error">@Output.ErrorInfo</div>
+        }
+        <h1 class="Welcome">
+            @if (_checkLoading)
+            {
+                <LoadingPageLayout />
+            }
+        </h1>
+    </div>
+    @if (ClientInfo.IsAuthenticated == true)
+    {
+        <div>@ClientInfo.UserInfo.Role.Id</div>
+        <div>@ClientInfo.UserInfo.Role.Priority</div>
+        <div>@ClientInfo.UserInfo.Role.Name</div>
+    }
+</body>
+
+@code {
+
+    private string inputLogin = string.Empty;
+    private string inputPassword = string.Empty;
+
+    int priority;
+
+    private Response<string>? Output = new Response<string>();
+    private bool _checkLoading;
+
+    Response<IEnumerable<UserRoleDto>> ListRole = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ClientInfo.Logout();
+    }
+
+    private async Task MethodAuthorization()
+    {
+        _checkLoading = true;
+        try
+        {
+            ListRole = await Http.GetFromJsonAsync<Response<IEnumerable<UserRoleDto>>>("http://localhost:9730/UserRole/GetAllEnumerable");
+            Output.Error = false;
+            await Task.Delay(1500);
+            Output = await Http.GetFromJsonAsync<Response<string>>($"http://localhost:9730/Auth/AuthenticateAsync?login={inputLogin}&password={inputPassword}");
+            if ((Output != null) && (Output.Value != null) && (Output.Error == false))
+            {
+                ClientInfo.Login(Output.Value);
+                Response<UserDto> userDto = await ClientInfo.Http.GetFromJsonAsync<Response<UserDto>>($"Auth/FindByLogin/{inputLogin}");
+                foreach (var item in ListRole.Value)
+                {
+                    if (item.Id == userDto.Value.Role.Id)
+                        priority = item.Priority;
+                }
+                if (userDto.Value != null)
+                    ClientInfo.AddClientInfo(userDto.Value, priority);
+                NavigationToPage(); // переход по страницам в зависимости от приоритета роли Пользователя
+            }
+            else
+            {
+                _checkLoading = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Output = new("Ошибка при запросе на сервер", ex.Message);
+        }
+    }
+    private void NavigationToPage()
+    {
+        switch (ClientInfo.UserInfo.Role.Priority)
+        {
+            case 1:
+                Navigation.NavigateTo("/News"); break;
+            case 2:
+                Navigation.NavigateTo("/News"); break;
+            case 3:
+                Navigation.NavigateTo("/News"); break;
+            case 4:
+                Navigation.NavigateTo("/News"); break;
+            default:
+                Output = new("Ошибка страница не найдена", $"error {ClientInfo.UserInfo.Role.Priority}"); break;
+        }
+    }
+}

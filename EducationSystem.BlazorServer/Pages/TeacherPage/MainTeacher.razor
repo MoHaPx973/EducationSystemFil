@@ -1,0 +1,24 @@
+﻿@page "/mainTeacher"
+@using EducationSystem.BlazorServer.Pages.StudentPage.Helper
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+
+
+<TeacherNavMenu />
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <VertificationOfAuthorization _roleTypeId="2" />
+    <div class="content">
+        <h1>Страница учителя</h1>
+        <p>Проверка</p>
+        <p>@ClientInfo.FullName</p>
+        <p>@ClientInfo.UserInfo.Role.Name</p>
+    </div>
+</body>
+
+@code {
+
+}

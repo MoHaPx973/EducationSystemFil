@@ -1,0 +1,260 @@
+﻿@page "/mainAdmin/Tools/Schedule/Create/{dayId:int}/{scheduleId:int}"
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers;
+@using EducationSystem.Shared.InputData.ScheduleInput;
+@using EducationSystem.Shared.Models.ClassDto;
+@using EducationSystem.Shared.Models.ScheduleDto;
+@using EducationSystem.Shared.Models;
+@using EducationSystem.Shared.OutputData;
+@using EducationSystem.Shared.Relationships;
+
+@inject NavigationManager Navigation
+
+<AdminNavMenu />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+
+<body class="adminPages">
+    <VertificationOfAuthorization _roleTypeId="1" />
+    <div class="content" style="font-size:20px">
+        @if ((selectSchedule != null) && (selectSchedule.Value != null))
+        {
+            <h3>Расписание для класса @selectSchedule.Value.LinkClass.Number @selectSchedule.Value.LinkClass.Letter</h3>
+        }
+        @if ((selectDay != null) && (selectDay.Value != null))
+        {
+            <table class="iksweb">
+                <tbody>
+                    <tr>
+                        <td style="font-size:24px;text-align:center;background-color:#8189c7;color: white;" colspan="7">
+                            @selectDay.Value.DayWeekName @selectDay.Value.Date.Date.Day.@selectDay.Value.Date.Date.Month.@selectDay.Value.Date.Date.Year
+                        </td>
+                    </tr>
+                    <tr>
+
+                        <td style="background-color:#aaafd9;color:white;width:30px">Урок</td>
+                        <td style="background-color:#aaafd9;color:white;width:150px">Предмет</td>
+                        <td style="background-color:#aaafd9;color:white;width:150px">Кабинет</td>
+                        <td style="background-color:#aaafd9;color:white;width:150px">Учитель</td>
+                        <td style="background-color:#aaafd9;color:white;width:30px">Начало</td>
+                        <td style="background-color:#aaafd9;color:white;width:30px">Конец</td>
+                        <td style="background-color:#aaafd9;color:white;width:15px">Удалить</td>
+                    </tr>
+                    @foreach (var item2 in selectLessons)
+                    {
+                        <tr>
+                            <td style="background-color:#e0e2f1">
+                                @if (item2 != null)
+                                {
+                                    @item2.Time.Number
+                                }
+                            </td>
+                            <td>
+                                @if (item2 != null)
+                                {
+                                    @item2.LinkItem.Name
+                                }
+                            </td>
+                            <td>
+                                @if (item2 != null)
+                                {
+                                    @item2.RoomNumber.Number
+                                }
+                            </td>
+                            <td>
+                                @if (item2 != null)
+                                {
+                                    <span>@item2.Teacher.Surname </span>
+                                    <span>@item2.Teacher.Name </span>
+                                    <span>@item2.Teacher.MiddleName </span>
+                                }
+                            </td>
+                            <td>
+                                @if (item2 != null)
+                                {
+                                    @item2.Time.StartTime
+                                }
+                            </td>
+
+                            <td>
+                                @if (item2 != null)
+                                {
+                                    @item2.Time.EndTime
+                                }
+                            </td>
+                            <td style="width: 10px">
+                                @if (item2 != null)
+                                {
+                                    <button style="background-image:url(image/icon_delete.png);padding:12px 12px;background-size: cover;border:none; margin-left:5px" @onclick="@( () => ButtonDelete(item2.Id))"></button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        <div class="padding-10"></div>
+        <h3>Добавить урок</h3>
+
+        @if ((teachersList != null) && (itemsList != null) && (lessonsTimesList != null) && (classroomsList!=null))
+        {
+            <select class="input-text-conf" @bind="newLesson.TimeId">
+                @if (lessonsTimesList != null)
+                {
+                    <option value="0">-</option>
+                    @foreach (var item in lessonsTimesList)
+                    {
+                        <option value="@item.Number">@item.Number</option>
+                    }
+                }
+            </select>
+
+            <select class="input-text-conf" @bind="newLesson.ItemId">
+                @if (itemsList != null)
+                {
+                    <option value="0">-</option>
+                    @foreach (var item in itemsList)
+                    {
+                        <option value="@item.ItemId">@item.LinkItem.Name</option>
+                    }
+                }
+            </select>
+
+            <select class="input-text-conf" @bind="newLesson.RoomNumberId">
+                @if (classroomsList != null)
+                {
+                    <option value="0">-</option>
+                    @foreach (var item in classroomsList)
+                    {
+                        <option value="@item.Number">@item.Number @item.Description</option>
+                    }
+                }
+            </select>
+
+            <select class="input-text-conf" @bind="newLesson.TeacherId">
+                @if (teachersList != null)
+                {
+                    <option value="0">-</option>
+                    @foreach (var item in teachersList)
+                    {
+                        <option value="@item.Id">@item.Surname @item.Name @item.MiddleName</option>
+                    }
+                }
+                    
+            </select>
+            <div class="padding-10"></div>
+            @if ((newLesson.TimeId != 0) && (newLesson.ItemId != 0) && (newLesson.RoomNumberId != 0) && (newLesson.TeacherId != 0))
+            {
+                <button @onclick="Create">Добавить</button>
+            }
+            @if (error)
+            {
+                <div class="error">Введены неверные значения</div>
+            }
+        }
+
+	</div>
+</body>
+
+@code {
+    [Parameter] public int dayId { get; set; }
+    [Parameter] public int scheduleId { get; set; }
+
+    Response<IEnumerable<LessonInSсheduleDto>> lessonsInSchedule = new();
+    List<LessonInSсheduleDto> selectLessons = new();
+    Response<StudyDayDto> selectDay = new();
+    Response<ClassScheduleDto> selectSchedule = new();
+
+    Response<IEnumerable<PersonDto>> persons = new();
+    List<PersonDto> teachersList = new();
+    Response<IEnumerable<ItemInCurriculumDto>> items = new();
+    List<ItemInCurriculumDto> itemsList = new();
+    Response<IEnumerable<LessonTimeDto>> lessonsTimes = new();
+    List<LessonTimeDto> lessonsTimesList = new();
+    Response<IEnumerable<ClassroomDto>> classrooms = new();
+    List<ClassroomDto> classroomsList = new();
+
+    bool error = false;
+
+    LessonInSсheduleInput newLesson = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        error = false;
+        newLesson = new();
+        try
+        {
+            //FindById/
+            selectDay = await ClientInfo.Http.GetFromJsonAsync<Response<StudyDayDto>>($"StudyDay/FindById/{dayId}");
+            lessonsInSchedule = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<LessonInSсheduleDto>>>
+            ($"LessonInSсhedule/GetAllByScheduleId/{scheduleId}");
+            selectLessons = lessonsInSchedule.Value.Where(d => d.Day.Id == dayId).OrderBy(n=>n.Time.Number).ToList();
+            selectSchedule = await ClientInfo.Http.GetFromJsonAsync<Response<ClassScheduleDto>>($"ClassSchedule/FindById/{scheduleId}");
+
+            //Person/GetAllEnumerable/false
+            persons = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<PersonDto>>>($"Person/GetAllEnumerable/false");
+            teachersList = persons.Value.Where(r => r.Role.Id == 2).ToList();
+
+            //ItemInCurriculum/GetByCurriculumIdAsync/1
+            items = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<ItemInCurriculumDto>>>
+            ($"ItemInCurriculum/GetByCurriculumIdAsync/{selectSchedule.Value.LinkClass.LinkCurriculum.Id}");
+            itemsList = items.Value.ToList();
+
+            //LessonTime/GetAllEnumerable
+            lessonsTimes = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<LessonTimeDto>>>("LessonTime/GetAllEnumerable");
+            lessonsTimesList = lessonsTimes.Value.ToList();
+
+            //Classroom/GetAllEnumerable
+            classrooms = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<ClassroomDto>>>("Classroom/GetAllEnumerable");
+            classroomsList = classrooms.Value.ToList();
+        }
+        catch {}
+    }
+    private async Task ButtonDelete(int id)
+    {
+        try
+        {
+            var _deleteResponse = await ClientInfo.Http.DeleteFromJsonAsync<Response<LessonInSсheduleDto>>($"LessonInSсhedule/Delete/{id}");
+            lessonsInSchedule = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<LessonInSсheduleDto>>>
+            ($"LessonInSсhedule/GetAllByScheduleId/{scheduleId}");
+            selectLessons = lessonsInSchedule.Value.Where(d => d.Day.Id == dayId).OrderBy(n => n.Time.Number).ToList();
+            StateHasChanged();
+        }
+        catch
+        {
+
+        }
+    }
+    private async Task Create()
+    {
+        error = false;
+        if ((newLesson.TimeId != 0) && (newLesson.ItemId != 0) && (newLesson.RoomNumberId != 0) && (newLesson.TeacherId != 0))
+        {
+            newLesson.ClassScheduleId = scheduleId;
+            newLesson.Day = selectDay.Value.Date;
+            try
+            {
+                //LessonInSсhedule/Create
+                //using var request = await ServerOk.PostAsJsonAsync("FileData/Send", fileByte);
+                using var request = await ClientInfo.Http.PostAsJsonAsync("LessonInSсhedule/Create", newLesson);
+
+                lessonsInSchedule = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<LessonInSсheduleDto>>>
+                ($"LessonInSсhedule/GetAllByScheduleId/{scheduleId}");
+                selectLessons = lessonsInSchedule.Value.Where(d => d.Day.Id == dayId).OrderBy(n => n.Time.Number).ToList();
+
+                StateHasChanged();
+            }
+            catch
+            {
+                error = true;
+            }
+        }
+        else
+        {
+            error = true;
+        }
+    }
+}

@@ -1,0 +1,91 @@
+﻿@page "/Tools/document/itemSelect/base/{type:int}/{classNumber:int}"
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+
+@inject NavigationManager Navigation
+
+<AdminNavMenu />
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <VertificationOfAuthorization _roleTypeId="1" />
+    <div class="content" style="font-size:24px">
+        <h3>
+            Начальное общее образование
+        </h3>
+        <div style="padding-left:20px">
+            <div class="link" @onclick="@( () => SelectItemNumber(1))">
+                Русский язык
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(2))">
+                Литература
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(3))">
+                Родной язык
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(4))">
+                Родная литература
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(5))">
+                Иностранный язык
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(6))">
+                Второй иностранный язык
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(7))">
+                Математика
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(8))">
+                Информатика
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(9))">
+                История
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(10))">
+                Обществознание
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(11))">
+                География
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(12))">
+                Основы духовно-нравственной культуры народов России
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(13))">
+                Физика
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(14))">
+                Химия
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(15))">
+                Биология
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(16))">
+                Музыка
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(17))">
+                Изобразительное искусство
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(18))">
+                Технология
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(19))">
+                Основы безопасности жизнедеятельности
+            </div>
+            <div class="link" @onclick="@( () => SelectItemNumber(20))">
+                Физическая культура
+            </div>
+        </div>
+    </div>
+</body>
+
+@code {
+    [Parameter] public int type { get; set; }
+    [Parameter] public int classNumber { get; set; }
+
+    private void SelectItemNumber(int itemNumber)
+    {
+        Navigation.NavigateTo($"/Tools/document/list/{type}/{classNumber}/{itemNumber}");
+    }
+}

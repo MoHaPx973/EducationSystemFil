@@ -1,0 +1,277 @@
+﻿@page "/mainAdmin/Tools/student"
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.Pages.SharedHelper
+@using EducationSystem.BlazorServer.SharedPages
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+@using EducationSystem.Shared.Models
+@using EducationSystem.Shared.OutputData
+
+@inject NavigationManager Navigation
+
+
+<AdminNavMenu />
+<head>
+
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+    <body class="adminPages">
+        <VertificationOfAuthorization _roleTypeId="1"/>
+        <div class="content">
+            <span class="filter">
+                <h3>Фильтр</h3>
+                <span>
+                По роли
+                <select class="input-text-conf" @bind="_newfilter.SelectValue1">
+                        <option value="1">Админ</option>
+                        <option value="2">Учитель</option>
+                        <option value="3">Студент</option>
+                        <option value="4">Родитель</option>
+                    </select>
+                </span>
+
+            <span>
+                Сортировка по
+                <select class="input-text-conf" @bind="_newfilter.SelectValue2">
+                    <option value="1">Номеру</option>
+                    <option value="2">Имени</option>
+                    <option value="3">Роли</option>
+                </select>
+            </span>
+
+            <span>
+                По типу профиля
+                <select class="input-text-conf" @bind="_newfilter.SelectValue3">
+                    <option value="0">Не срытый</option>
+                    <option value="1">Скрытый</option>
+
+                </select>
+            </span>
+
+             <div>
+            <div class="padding-5"></div>
+            <button class="buttonFilter" @onclick="NewFilter">Применить</button>
+            <button class="buttonFilter" @onclick="ResetFilter">Сбросить</button>
+            </div>
+            <div class="padding-10"></div>
+            </span>
+
+            <p>
+                @if (_startDelete)
+                {
+                    <div class="filter">
+                        <div style="font-size:20px">Вы действительно хотите удалить пользователя id=@_idDelete?</div>
+                        <div class="padding-10"></div>
+                        <button style="font-size:18px;color:red" @onclick="@( () => DeletePerson(_idDelete,true))">Да</button>
+                    <button style="font-size:18px" @onclick="@( () => DeletePerson(_idDelete,false))">Нет</button>
+                    </div>
+                }
+            </p>
+
+            <div class="padding-5"> </div>
+
+            @if (CurrentPage!=null)
+            {
+            @if ((CurrentPage.Value!=null))
+            {
+                <table class="fio-table">
+                    <tr>
+                        <th style="width:10%">Id</th>
+                        <th style="width:20%">Фамилия</th>
+                        <th style="width:20%">Имя</th>
+                        <th style="width:20%">Отчество</th>
+                        <th style="width:10%">Id роли</th>
+                        <th style="width:15%">Роль</th>
+                    </tr>
+                    @foreach (var item in CurrentPage.Value)
+                    {
+                        <tr>
+                            <td @onclick="@( () => ButtonUpdate(item.Id))">@item.Id</td>
+                            <td @onclick="@( () => ButtonUpdate(item.Id))">@item.Surname</td>
+                            <td @onclick="@( () => ButtonUpdate(item.Id))">@item.Name</td>
+                            <td @onclick="@( () => ButtonUpdate(item.Id))">@item.MiddleName</td>
+                            <td @onclick="@( () => ButtonUpdate(item.Id))">@item.Role.Id</td>
+                            <td @onclick="@( () => ButtonUpdate(item.Id))">@item.Role.Name</td>
+                            <div class="padding-5"></div>
+                            <button style="background-image:url(image/icon_update.png);padding:12px 12px;background-size: cover;border:none; margin-left:5px" @onclick="@( () => ButtonUpdate(item.Id))"></button>
+                            @if (personIsHidden)
+                            {
+                                <button style="background-image:url(image/icon_eye.png);padding:12px 12px;background-size: cover;border:none; margin-left:5px" @onclick="@( () => ButtonHiddenAndReveal(item.Id))"></button>
+                                <button style="background-image:url(image/icon_delete.png);padding:12px 12px;background-size: cover;border:none; margin-left:5px" @onclick="@( () => ButtonDelete(item.Id))"></button>
+                            }
+                            else
+                            {
+                                <button style="background-image:url(image/icon_hidden.png);padding:12px 12px;background-size: cover;border:none; margin-left:5px" @onclick="@( () => ButtonHiddenAndReveal(item.Id))"></button>
+                            }
+                            <div class="padding-5"> </div>
+                        </tr>
+                    }
+                </table>
+                
+            }
+            else
+            {
+                <LoadingPageLayout />
+            }
+        }
+        else
+        {
+            <div>Не найдено...</div>
+        }
+        <div class="padding-20"> </div>
+        <div class="buttonContainer">
+        <button class="buttonPage" @onclick="PreviousPage">Предыдущая страница </button>
+        <button class="buttonPage" @onclick="NextPage">Следующая страница </button>
+        </div>
+        </div>
+    </body>
+
+
+
+@code {
+    Filter _filter = new();
+    Filter _newfilter = new();
+
+
+    private Response<IEnumerable<PersonDto>>? CurrentPage = new();
+    private Response<IEnumerable<PersonDto>>? SearchedPage = new();
+
+    private bool personIsHidden;
+
+    int start = 0;
+    int count = 10;
+
+    private bool _startDelete = false;
+    int _idDelete;
+
+    protected override async Task OnInitializedAsync()
+    {
+        personIsHidden = false;
+        try
+        {
+            personIsHidden = (_filter.SelectValue3 != 0);
+            SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<PersonDto>>>
+                ($"Person/GetPageEnumerableByParams/{start}/{count}/{_filter.SelectValue1}/{personIsHidden}/{_filter.SelectValue2}");
+            CurrentPage = SearchedPage;
+        }
+        catch
+        {
+            CurrentPage = new();
+        }
+
+    }
+    private async Task NextPage()
+    {
+        start++;
+        SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<PersonDto>>>
+            ($"Person/GetPageEnumerableByParams/{start}/{count}/{_filter.SelectValue1}/{personIsHidden}/{_filter.SelectValue2}");
+        if (SearchedPage.Value.Count() != 0)
+        {
+            CurrentPage = SearchedPage; ;
+        }
+        else
+        {
+            SearchedPage = new();
+            start--;
+        }
+    }
+    private async Task PreviousPage()
+    {
+        start--;
+        if (start >= 0)
+        {
+            SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<PersonDto>>>
+                ($"Person/GetPageEnumerableByParams/{start}/{count}/{_filter.SelectValue1}/{personIsHidden}/{_filter.SelectValue2}");
+            if (SearchedPage.Value != null)
+            {
+                CurrentPage = SearchedPage;
+            }
+            else
+            {
+                SearchedPage = new();
+                start++;
+            }
+        }
+        else
+        {
+            start++;
+        }
+    }
+
+    // Фильтры
+    private async Task NewFilter()
+    {
+
+        _filter = new(_newfilter);
+        personIsHidden = (_filter.SelectValue3 != 0);
+        start = 0;
+        try
+        {
+            CurrentPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<PersonDto>>>
+                 ($"Person/GetPageEnumerableByParams/{start}/{count}/{_filter.SelectValue1}/{personIsHidden}/{_filter.SelectValue2}");
+        }
+        catch
+        {
+
+        }
+    }
+    private async Task ResetFilter()
+    {
+        _filter = new();
+        _newfilter = new();
+        personIsHidden = (_filter.SelectValue3 != 0);
+        start = 0;
+        CurrentPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<PersonDto>>>
+            ($"Person/GetPageEnumerableByParams/{start}/{count}/{_filter.SelectValue1}/{personIsHidden}/{_filter.SelectValue2}");
+    }
+
+    // Кнопки
+    private void ButtonUpdate(int id)
+    {
+        Navigation.NavigateTo($"mainAdmin/Tools/student/update/{id}");
+    }
+    private async Task ButtonDelete(int id)
+    {
+        _idDelete = id;
+        _startDelete = true;
+    }
+    private async Task ButtonHiddenAndReveal(int id)
+    {
+        var _hiddenResponse = await ClientInfo.Http.DeleteFromJsonAsync<Response<PersonDto>>($"Person/HideOrShow/{id}");
+        try
+        {
+            SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<PersonDto>>>
+               ($"Person/GetPageEnumerableByParams/{start}/{count}/{_filter.SelectValue1}/{personIsHidden}/{_filter.SelectValue2}");
+            CurrentPage = SearchedPage;
+        }
+        catch
+        {
+            CurrentPage = new();
+        }
+    }
+
+    private async Task DeletePerson(int id,bool delete)
+    {
+        if (delete)
+        {
+            try
+            {
+                var _deleteResponse = await ClientInfo.Http.DeleteFromJsonAsync<Response<PersonDto>>($"Person/Delete/{id}");
+                SearchedPage = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<PersonDto>>>
+                     ($"Person/GetPageEnumerableByParams/{start}/{count}/{_filter.SelectValue1}/{personIsHidden}/{_filter.SelectValue2}");
+                CurrentPage = SearchedPage;
+                _startDelete = false;
+                _idDelete = 0;
+            }
+            catch
+            {
+
+            }
+        }
+        else
+        {
+            _startDelete = false;
+            _idDelete = 0;
+        }
+    }
+}

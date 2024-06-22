@@ -1,0 +1,31 @@
+﻿@page "/mainTeacher/assessment"
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+
+<TeacherNavMenu />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <VertificationOfAuthorization _roleTypeId="2" />
+    <div class="content">
+        <div>
+            <NavLink class="nav-link" href="/mainTeacher/assessment/check">
+                <span class="oi oi-plus" aria-hidden="true"></span> Открыть список оценок
+            </NavLink>
+        </div>
+        <div class="padding-5"></div>
+        <div>
+            <NavLink class="nav-link" href="/mainTeacher/assessment/set">
+                <span class="oi oi-plus" aria-hidden="true"></span> Выставить оценку
+            </NavLink>
+        </div>
+    </div>
+</body>
+
+@code {
+
+}
