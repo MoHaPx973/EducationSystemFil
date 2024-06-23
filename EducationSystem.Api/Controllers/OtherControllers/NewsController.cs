@@ -33,6 +33,11 @@ namespace EducationSystem.Api.Controllers.OtherControllers
         {
             return _interactor.GetAllEnumerable();
         }
+        [HttpGet("GetAllEnumerableChat")]
+        public Response<IEnumerable<NewsDto>> GetAllEnumerableChat()
+        {
+            return _interactor.GetAllEnumerableChat();
+        }
 
     }
 }

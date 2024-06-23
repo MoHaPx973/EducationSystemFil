@@ -36,9 +36,27 @@ namespace EducationSystem.App.Interactor.OtherInteractor
         // Вывод всех данных из списка 
         public Response<IEnumerable<NewsDto>> GetAllEnumerable()
         {
+            Response<IEnumerable<NewsDto>> news = new();
             try
             {
-                return new Response<IEnumerable<NewsDto>>(_genericRepository.GetAllEnumerableWithoutLink().Select(s => s.ToDto()));
+                news = new Response<IEnumerable<NewsDto>>(_genericRepository.GetAllEnumerableWithoutLink().Select(s => s.ToDto()));
+                news.Value = news.Value.Where(i=>i.Title!="0");
+                return news;
+            }
+            catch (Exception ex)
+            {
+                return new Response<IEnumerable<NewsDto>>("Ошибка чтения", ex.Message);
+            }
+        }
+
+        public Response<IEnumerable<NewsDto>> GetAllEnumerableChat()
+        {
+            Response<IEnumerable<NewsDto>> news = new();
+            try
+            {
+                news = new Response<IEnumerable<NewsDto>>(_genericRepository.GetAllEnumerableWithoutLink().Select(s => s.ToDto()));
+                news.Value = news.Value.Where(i => i.Title == "0");
+                return news;
             }
             catch (Exception ex)
             {

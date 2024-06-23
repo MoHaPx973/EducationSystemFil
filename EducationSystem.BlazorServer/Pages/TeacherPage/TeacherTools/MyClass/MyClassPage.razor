@@ -1,0 +1,81 @@
+﻿@page "/mainTeacher/Tools/MyClass"
+@using EducationSystem.BlazorServer.Pages.StudentPage.Helper
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers;
+@using EducationSystem.Shared.Models.ClassDto;
+@using EducationSystem.Shared.OutputData;
+@using EducationSystem.Shared.Relationships;
+
+
+
+@inject NavigationManager Navigation
+
+<TeacherNavMenu />
+<VertificationOfAuthorization _roleTypeId="2" />
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+
+<body class="content">
+
+        @if ((StudentList != null))
+        {
+            @if (StudentList.Value != null)
+            {
+            <h1>Список учеников @StudentList.Value.FirstOrDefault().SchoolClass.Number @StudentList.Value.FirstOrDefault().SchoolClass.Letter</h1>
+            <div class="padding-10"></div>
+                <table class="fio-table">
+                    <tbody>
+                        <tr>
+                            <td width="100px">ФИО</td>
+                        </tr>
+                        @foreach (var item in StudentList.Value)
+                        {
+                            <tr>
+                            <td width="100px">
+                                    <div class="link" @onclick="@( () => PersonInfo(item.Student.Id))">
+                                        @item.Student.Surname @item.Student.Name @item.Student.MiddleName
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="error">@StudentList.ErrorMessage</div>
+                <div class="error">@StudentList.ErrorInfo</div>
+            }
+        }
+
+</body>
+
+@code {
+    private int year = 0;
+    private int selectClassId = 0;
+    private bool flag = false;
+    Response<IEnumerable<SchoolClassDto>> ClassList = new();
+    Response<IEnumerable<StudentInClassDto>> StudentList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        flag = false;
+        StudentList = new();
+        selectClassId = 2;
+        try
+        {
+            StudentList = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<StudentInClassDto>>>
+                ($"StudentInClass/GetAllEnumerableByClassId/{selectClassId}");
+        }
+        catch { }
+    }
+
+    
+    private void PersonInfo(int id)
+    {
+        Navigation.NavigateTo($"/personInfo/{id}");
+    }
+}

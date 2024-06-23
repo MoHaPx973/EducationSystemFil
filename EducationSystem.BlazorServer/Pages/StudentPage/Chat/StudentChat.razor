@@ -1,0 +1,122 @@
+﻿@page "/Chat/Student"
+@using EducationSystem.BlazorServer.Pages.AdminPage.Helper
+@using EducationSystem.BlazorServer.Pages.ParentPage.Helper
+@using EducationSystem.BlazorServer.Pages.StudentPage.Helper
+@using EducationSystem.BlazorServer.Pages.TeacherPage.Helper
+@using EducationSystem.BlazorServer.StaticHelper
+@using EducationSystem.BlazorServer.StaticHelpers
+@using EducationSystem.Shared.Models;
+@using EducationSystem.Shared.Other;
+@using EducationSystem.Shared.OutputData;
+@using EducationSystem.Shared.Relationships;
+
+
+@inject NavigationManager Navigation
+
+@if (ClientInfo.UserInfo.Role.Priority == 3)
+{
+    <StudentNavMenu />
+}
+
+
+<head>
+    <link rel="stylesheet" href="css/AdminStyle.css">
+</head>
+<body class="adminPages">
+    <div class="content">
+        <h1 style="padding-left:20px">Объявления для 11 В</h1>
+        <div>
+            @if ((request != null) && (request.Value != null))
+                @foreach (var item in newsList.Skip(move).Take(count))
+                {
+                    <div style="width:20%"></div>
+                    <div style="width:60%" class="user-info">
+                        <p align="justify">@item.Text</p>
+                        <p align="right" style="font-size:14px">@item.Path</p>
+                    </div>
+                    <div style="width:20%"></div>
+                    <div class="padding-5"></div>
+                }
+        </div>
+        <div>
+            <button style="margin-left:20px" @onclick="BackPage">Предыдущая страница</button>
+            <button style="margin-left:20px" @onclick="NextPage">Следующая страница</button>
+        </div>
+        
+
+    </div>
+</body>
+
+@code {
+
+    NewsDto newMessage = new();
+    string newPath = string.Empty;
+    Response<IEnumerable<NewsDto>> request = new();
+    List<NewsDto> newsList = new();
+    int count = 3;
+    int move = 0;
+    //http://localhost:9730/News/Create
+    protected override async Task OnInitializedAsync()
+    {
+        newMessage.Title = "0";
+        newMessage.Path = "0";
+        newPath = Directory.GetCurrentDirectory();
+        try
+        {
+            request = await ClientInfo.Http.GetFromJsonAsync<Response<IEnumerable<NewsDto>>>("News/GetAllEnumerableChat");
+            newsList = request.Value.ToList();
+            newsList = newsList.OrderByDescending(i => i.Id).ToList();
+        }
+        catch
+        {
+
+        }
+
+        StateHasChanged();
+    }
+    private async Task Insert()
+    {
+        try
+        {
+            DateTime now = DateTime.Now;
+            newMessage.Path = now.ToString("dd-MM-yyyy"); ;
+            newMessage.Text = text;
+            if (!(String.IsNullOrEmpty(newMessage.Text)))
+            {
+                using var request = await ClientInfo.Http.PostAsJsonAsync("News/Create", newMessage);
+                request.EnsureSuccessStatusCode();
+            }
+            newMessage.Text = null;
+        }
+        catch { }
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+
+    private string text = "Введите текст";
+
+    private void OnTextChanged(ChangeEventArgs e)
+    {
+        text = (string)e.Value;
+        // Здесь вы можете выполнять дополнительные действия с текстом
+    }
+
+    private void NextPage()
+    {
+        move += 3;
+        if (move >= request.Value.Count())
+        {
+            move -= 3;
+        }
+        StateHasChanged();
+    }
+    private void BackPage()
+    {
+        move -= 3;
+        if (move < 0)
+        {
+            move += 3;
+        }
+        StateHasChanged();
+    }
+}
